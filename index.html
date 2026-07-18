@@ -189,7 +189,68 @@
     .help-widget.is-collapsed .help-toggle { transform:rotate(180deg); }
     [hidden] { display:none !important; }
     @media (max-width:1020px) { .frames { grid-template-columns:repeat(2, minmax(0, 1fr)); } }
-    @media (max-width:760px) { .app { width:min(100% - 24px, 1040px); padding-top:20px; } .hero,.workspace,.idea-fields,.creative-settings { grid-template-columns:1fr; } .hero { gap:14px; margin-bottom:16px; } .scripts-head,.stage-heading { align-items:flex-start; } .storyboard-head,.prompt-stage-head { align-items:flex-start; flex-direction:column; } .frames { grid-template-columns:1fr; } .prompt-card { grid-template-columns:1fr; } .reference-dropzone { max-width:190px; } .idea-actions { align-items:stretch; flex-direction:column; } .idea-panel .idea-actions-left { flex-wrap:wrap; } .idea-actions .primary { width:100%; } .duration-pill { min-width:150px; } .style-grid { grid-template-columns:repeat(2, minmax(0,1fr)); } .help-widget { right:12px; bottom:12px; } }
+    @media (max-width:760px) {
+      body { background:radial-gradient(circle at 100% 0%, rgba(95,67,191,.3), transparent 23rem), var(--bg); }
+      .app { width:min(100% - 24px, 1040px); padding:18px 0 92px; }
+      .topline { margin-bottom:16px; }
+      .mode { display:none; }
+      .hero,.workspace,.idea-fields { grid-template-columns:1fr; }
+      .hero { gap:12px; margin-bottom:16px; padding:8px 0 18px; }
+      h1 { font-size:clamp(36px, 11vw, 52px); line-height:.98; }
+      .hero p { font-size:14px; }
+      .idea-panel,.scripts-panel,.storyboard,.prompt-stage { padding:16px; border-radius:16px; }
+      .stage-heading { align-items:flex-start; gap:12px; margin-bottom:14px; }
+      .stage-heading h2 { font-size:22px; }
+      .stage-heading p { font-size:13px; }
+      .stage-meta { padding-top:2px; }
+      .badge { font-size:11px; }
+      .idea-panel .idea-editable { min-height:152px; padding:14px; font-size:16px; }
+      .idea-panel .idea-actions { display:grid; grid-template-columns:1fr; gap:14px; margin-top:14px; }
+      .idea-panel .idea-actions-left { display:grid; grid-template-columns:1fr; min-width:0; gap:10px; }
+      .idea-panel .creative-settings { display:flex; width:100%; max-width:100%; gap:10px; overflow-x:auto; overscroll-behavior-x:contain; padding:0 1px 6px; scrollbar-width:thin; }
+      .creative-tile,.reference-field .reference-slot,.reference-card { width:70px; }
+      .creative-tile,.reference-field .reference-slot { height:70px; }
+      .reference-field { flex:0 0 auto; }
+      .reference-field .reference-preview { gap:8px; }
+      .clear-reference { width:70px; }
+      .timing-control,.model-control { width:100%; }
+      .duration-pill,.model-pill { width:100%; min-width:0; min-height:48px; }
+      .duration-pill { text-align:center; }
+      .timing-popover { position:fixed; left:12px; right:12px; bottom:12px; width:auto; transform:none; }
+      .model-popover { left:0; width:min(100%, 360px); }
+      .idea-actions .primary { width:100%; min-height:52px; }
+      .scripts-head { align-items:flex-start; }
+      .storyboard-head,.prompt-stage-head { align-items:flex-start; flex-direction:column; }
+      .storyboard-head .ghost { width:100%; }
+      .frames { grid-template-columns:1fr; }
+      .frame { min-height:130px; }
+      .prompt-card { grid-template-columns:1fr; gap:10px; padding:14px; }
+      .prompt-links { overflow-x:auto; align-items:center; padding-bottom:2px; }
+      .prompt-editable { min-height:130px; font-size:16px; }
+      .reference-suggestions { position:fixed; left:12px; right:12px; bottom:12px; width:auto; }
+      .style-modal { align-items:end; padding:10px; }
+      .style-modal-dialog { width:100%; max-height:calc(100vh - 20px); padding:16px; border-radius:18px; }
+      .style-modal-head { margin-bottom:14px; }
+      .style-modal-head h2 { font-size:23px; }
+      .style-grid { grid-template-columns:repeat(2, minmax(0,1fr)); gap:9px; }
+      .style-option { border-radius:12px; }
+      .style-option span { left:8px; bottom:8px; font-size:12px; }
+      .help-widget { right:12px; bottom:12px; width:min(330px, calc(100vw - 24px)); }
+    }
+    @media (max-width:430px) {
+      .topline { gap:8px; }
+      .brand { font-size:14px; }
+      .brand-mark { width:30px; height:30px; border-radius:10px; }
+      .stage-heading { flex-direction:column; }
+      .stage-meta { align-self:flex-start; }
+      .scripts-head { flex-direction:column; }
+      .scripts-head .ghost { width:100%; }
+      .script-card { padding:14px; }
+      .script-card-top { align-items:flex-start; flex-direction:column; }
+      .script-text { min-height:210px; font-size:16px; }
+      .style-modal-head p { font-size:12px; }
+      .help-widget:not(.is-collapsed) { width:calc(100vw - 24px); }
+    }
   </style>
 </head>
 <body>

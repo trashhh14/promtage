@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Viral Script Studio</title>
+  <style>
+    :root { color-scheme:dark; --bg:#080a10; --panel:#11151f; --panel-2:#191f2c; --text:#f8faff; --muted:#9ca7bd; --line:#2a3447; --accent:#b6ff3b; --accent-ink:#122000; --violet:#8f7cff; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-width:320px; background:radial-gradient(circle at 92% 0%, rgba(95,67,191,.38) 0, transparent 34rem),radial-gradient(circle at -5% 34%, rgba(63,157,151,.16) 0, transparent 32rem),var(--bg); color:var(--text); font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    button, textarea, select, input { font:inherit; }
+    .app { width:min(1440px, calc(100% - 48px)); margin:0 auto; padding:28px 0 64px; }
+    .topline { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:26px; }
+    .brand { display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:-.04em; }
+    .brand-mark { display:grid; place-items:center; width:34px; height:34px; border-radius:11px; background:linear-gradient(135deg, var(--accent), #6dffcf); color:#101708; font-size:18px; box-shadow:0 0 22px rgba(182,255,59,.24); }
+    .mode { color:var(--muted); font-size:14px; }
+    .hero { display:grid; grid-template-columns:minmax(0, 1fr) minmax(320px, .55fr); gap:36px; align-items:end; margin-bottom:20px; padding:20px 0 24px; border-bottom:1px solid rgba(156,167,189,.18); }
+    h1 { margin:0; max-width:850px; font-size:clamp(38px, 5vw, 68px); line-height:.94; letter-spacing:-.07em; }
+    .hero p { max-width:460px; margin:0 0 5px; color:var(--muted); font-size:16px; line-height:1.5; }
+    .workspace { display:grid; grid-template-columns:1fr; gap:14px; }
+    .panel { border:1px solid var(--line); border-radius:18px; background:linear-gradient(120deg, rgba(22,28,40,.98), rgba(13,17,26,.98)); box-shadow:0 18px 54px rgba(0,0,0,.2); }
+    .idea-panel,.scripts-panel,.storyboard,.prompt-stage { padding:22px; }
+    .idea-panel { position:relative; overflow:hidden; border-color:#35435a; background:radial-gradient(circle at 88% 18%, rgba(122,94,255,.22), transparent 24rem),linear-gradient(125deg, rgba(24,31,46,.99), rgba(9,13,21,.99)); }
+    .idea-panel::after { content:""; position:absolute; right:-5rem; bottom:-7rem; width:22rem; height:22rem; border-radius:50%; background:radial-gradient(circle, rgba(182,255,59,.13), transparent 68%); pointer-events:none; }
+    .stage-heading { position:relative; z-index:1; display:flex; align-items:end; justify-content:space-between; gap:20px; margin-bottom:18px; }
+    .stage-heading p { margin:8px 0 0; color:var(--muted); font-size:14px; line-height:1.5; }
+    .stage-meta { display:flex; align-items:center; gap:8px; }
+    .timing-control { position:relative; }
+    .timing-toggle { min-height:34px; padding:0 11px; border:1px solid #43516a; border-radius:10px; background:rgba(17,23,35,.7); color:var(--text); cursor:pointer; font-size:12px; font-weight:700; }
+    .timing-toggle:hover { border-color:var(--accent); }
+    .timing-popover { position:absolute; left:0; bottom:calc(100% + 10px); z-index:10; width:248px; padding:14px; border:1px solid #455875; border-radius:14px; background:rgba(18,23,34,.98); box-shadow:0 18px 40px rgba(0,0,0,.42); }
+    .timing-popover[hidden] { display:none; }
+    .timing-popover-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    .timing-popover-head strong { font-size:13px; }
+    .timing-value { color:var(--accent); font-size:18px; font-weight:800; }
+    .timing-range { width:100%; accent-color:var(--accent); }
+    .timing-scale { display:flex; justify-content:space-between; margin-top:5px; color:var(--muted); font-size:10px; }
+    .eyebrow { margin:0 0 7px; color:var(--accent); font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+    h2 { margin:0; font-size:24px; letter-spacing:-.045em; }
+    .description { margin:7px 0 10px; color:var(--muted); font-size:14px; line-height:1.45; }
+    textarea { width:100%; color:var(--text); border:1px solid var(--line); border-radius:12px; background:#0b0e15; padding:13px; outline:none; resize:vertical; line-height:1.45; }
+    textarea:focus { border-color:var(--violet); box-shadow:0 0 0 3px rgba(168,140,255,.16); }
+    .idea-fields { position:relative; z-index:1; display:grid; grid-template-columns:minmax(0, 1fr) 235px; gap:16px; align-items:start; }
+    .idea-copy { position:relative; min-width:0; }
+    #idea { min-height:182px; font-size:15px; background:rgba(5,8,14,.68); }
+    .idea-editable { width:100%; padding:13px; border:1px solid var(--line); border-radius:12px; color:var(--text); outline:0; line-height:1.45; white-space:pre-wrap; }
+    .idea-editable:focus { border-color:var(--violet); box-shadow:0 0 0 3px rgba(168,140,255,.16); }
+    .idea-editable:empty::before { content:attr(data-placeholder); color:#7d879a; pointer-events:none; }
+    .creative-settings { display:grid; gap:14px; }
+    .field { min-width:0; }
+    .field-label { display:block; margin:0 0 7px; color:var(--muted); font-size:12px; font-weight:700; }
+    .style-input { width:100%; min-height:46px; border:1px solid #36445c; border-radius:12px; background:rgba(5,8,14,.72); color:var(--text); padding:0 13px; outline:none; }
+    .style-input:focus { border-color:var(--violet); box-shadow:0 0 0 3px rgba(168,140,255,.16); }
+    .reference-dropzone { position:relative; min-height:218px; border:1px dashed #7186aa; border-radius:14px; background:linear-gradient(145deg, rgba(88,104,154,.18), rgba(5,8,14,.86)); overflow:hidden; transition:border-color .16s ease, background .16s ease; }
+    .reference-dropzone.is-dragging { border-color:var(--accent); background:rgba(182,255,59,.1); }
+    .reference-dropzone input { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+    .reference-preview { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:6px; padding:7px; }
+    .reference-slot { position:relative; aspect-ratio:3 / 4; border:1px dashed #7186aa; border-radius:10px; background:rgba(10,14,23,.62); overflow:hidden; }
+    .reference-slot.is-add { display:grid; place-items:center; cursor:pointer; color:var(--muted); font-size:11px; line-height:1.35; text-align:center; transition:background .16s ease, border-color .16s ease; }
+    .reference-slot.is-add:hover { border-color:var(--accent); background:rgba(182,255,59,.1); color:var(--text); }
+    .reference-slot.is-add span { display:grid; place-items:center; gap:4px; }
+    .reference-slot.is-add strong { display:grid; place-items:center; width:30px; height:30px; border:1px solid rgba(182,255,59,.45); border-radius:10px; color:var(--accent); font-size:20px; font-weight:400; }
+    .reference-slot img { width:100%; height:100%; object-fit:cover; display:block; }
+    .reference-add-overlay { position:absolute; inset:0; display:grid; place-items:center; border:0; color:var(--text); background:rgba(4,7,12,0); cursor:pointer; opacity:0; transition:opacity .16s ease, background .16s ease; }
+    .reference-add-overlay span { display:grid; place-items:center; width:52px; height:52px; border:1px solid rgba(182,255,59,.72); border-radius:16px; background:rgba(8,13,18,.56); color:var(--accent); font-size:34px; line-height:1; }
+    .reference-slot.is-filled:hover .reference-add-overlay { opacity:1; background:rgba(7,10,16,.4); }
+    .idea-actions { grid-column:1 / -1; display:flex; justify-content:space-between; align-items:center; gap:18px; padding-top:2px; border-top:1px solid rgba(113,134,170,.22); }
+    .idea-actions-left { display:flex; align-items:center; gap:12px; }
+    .idea-actions .tip { margin:0; }
+    .idea-actions .primary { width:auto; min-width:228px; }
+    .idea-panel .idea-fields { display:block; }
+    .idea-panel .idea-copy { width:100%; }
+    .idea-panel .idea-editable { min-height:172px; padding:18px; border-color:#62718a; background:rgba(4,7,12,.78); font-size:16px; }
+    .idea-panel .idea-actions { display:flex; align-items:center; justify-content:space-between; margin-top:18px; padding-top:0; border:0; }
+    .idea-panel .idea-actions-left { gap:10px; }
+    .idea-panel .creative-settings { display:flex; align-items:flex-start; gap:12px; margin:0; }
+    .creative-tile { display:grid; place-items:center; width:76px; height:76px; padding:7px; border:1px solid #62718a; border-radius:12px; background:rgba(15,20,30,.78); color:var(--text); cursor:pointer; }
+    .creative-tile:hover { border-color:var(--accent); background:rgba(182,255,59,.09); }
+    .creative-tile.is-style-selected { background-image:linear-gradient(rgba(8,12,18,.15), rgba(8,12,18,.65)),url('assets/style-gallery.png'); background-repeat:no-repeat; background-size:300% auto; background-position:var(--style-preview-position, 0 0); }
+    .creative-tile.is-style-selected .creative-tile-icon { opacity:0; }
+    .creative-tile.is-style-selected .creative-tile-label { padding:3px 5px; border-radius:5px; background:rgba(5,8,13,.72); color:#fff; }
+    .creative-tile-icon { font-size:27px; line-height:1; }
+    .creative-tile-label { margin-top:4px; color:var(--muted); font-size:9px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; }
+    .reference-field { width:auto; }
+    .reference-field .reference-dropzone { min-height:0; height:auto; border:0; border-radius:0; background:transparent; overflow:visible; }
+    .reference-field .reference-preview { display:flex; align-items:flex-start; gap:10px; padding:0; }
+    .reference-card { display:grid; gap:5px; width:76px; }
+    .reference-field .reference-slot { width:76px; height:76px; aspect-ratio:auto; border:1px solid #62718a; border-radius:12px; background:rgba(15,20,30,.78); }
+    .reference-slot.is-empty { display:grid; place-items:center; color:var(--muted); cursor:pointer; text-align:center; }
+    .reference-slot.is-empty:hover { border-color:var(--accent); background:rgba(182,255,59,.09); color:var(--text); }
+    .reference-empty-icon { display:block; color:var(--text); font-size:26px; line-height:1; }
+    .reference-empty-label { display:block; margin-top:4px; font-size:9px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; }
+    .clear-reference { width:76px; padding:0; border:0; background:transparent; color:#9ca7bd; cursor:pointer; font-size:9px; text-decoration:underline; }
+    .clear-reference:hover { color:var(--accent); }
+    .duration-pill { min-width:220px; min-height:42px; padding:0 16px; border:1px solid #75839a; border-radius:12px; background:rgba(10,14,22,.74); color:var(--text); cursor:pointer; font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .model-control { position:relative; }
+    .model-pill { min-width:235px; min-height:42px; padding:0 14px; border:1px solid #75839a; border-radius:12px; background:rgba(10,14,22,.74); color:var(--text); cursor:pointer; font-size:12px; font-weight:800; text-align:left; }
+    .model-pill span { color:var(--accent); }
+    .model-popover { position:absolute; left:0; bottom:calc(100% + 10px); z-index:12; width:330px; padding:8px; border:1px solid #46556e; border-radius:14px; background:rgba(17,22,33,.99); box-shadow:0 20px 48px rgba(0,0,0,.48); }
+    .model-popover[hidden] { display:none; }
+    .model-choice { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; width:100%; padding:10px; border:0; border-radius:10px; background:transparent; color:var(--text); text-align:left; cursor:pointer; }
+    .model-choice:hover,.model-choice.is-selected { background:rgba(182,255,59,.1); }
+    .model-choice strong { display:block; font-size:13px; }
+    .model-choice small { display:block; margin-top:2px; color:var(--muted); font-size:11px; }
+    .model-vendor { align-self:start; padding:3px 5px; border-radius:5px; background:#293246; color:#cbd5e8; font-size:9px; font-weight:800; }
+    .style-modal { position:fixed; inset:0; z-index:50; display:grid; place-items:center; padding:24px; background:rgba(3,5,9,.7); backdrop-filter:blur(12px); }
+    .style-modal[hidden] { display:none; }
+    .style-modal-dialog { width:min(820px, 100%); max-height:min(720px, calc(100vh - 48px)); overflow:auto; padding:22px; border:1px solid #46556e; border-radius:20px; background:linear-gradient(145deg, #171e2c, #0b0f18); box-shadow:0 34px 100px rgba(0,0,0,.58); }
+    .style-modal-head { display:flex; align-items:start; justify-content:space-between; gap:16px; margin-bottom:18px; }
+    .style-modal-head h2 { font-size:28px; }
+    .style-modal-head p { margin:6px 0 0; color:var(--muted); font-size:13px; }
+    .style-close { width:34px; height:34px; border:1px solid #45516a; border-radius:10px; background:transparent; color:var(--text); cursor:pointer; font-size:20px; }
+    .style-grid { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px; }
+    .style-option { position:relative; aspect-ratio:1 / 1; min-height:0; overflow:hidden; border:1px solid #3f4d65; border-radius:14px; background-color:#141a25; background-image:url('assets/style-gallery.png'); background-repeat:no-repeat; background-size:300% auto; cursor:pointer; }
+    .style-option:hover,.style-option.is-selected { border-color:var(--accent); box-shadow:0 0 0 2px rgba(182,255,59,.15); }
+    .style-option::after { content:""; position:absolute; inset:0; background:linear-gradient(transparent 30%, rgba(3,6,11,.88)); }
+    .style-option span { position:absolute; left:11px; bottom:10px; z-index:1; color:#fff; font-size:13px; font-weight:800; }
+    .style-option:nth-child(1) { background-position:0 0; }.style-option:nth-child(2) { background-position:50% 0; }.style-option:nth-child(3) { background-position:100% 0; }.style-option:nth-child(4) { background-position:0 100%; }.style-option:nth-child(5) { background-position:50% 100%; }.style-option:nth-child(6) { background-position:100% 100%; }
+    .button { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:46px; padding:0 18px; border:0; border-radius:12px; cursor:pointer; font-weight:800; transition:transform .16s ease, opacity .16s ease, background .16s ease; }
+    .button:hover { transform:translateY(-1px); }
+    .button:disabled { cursor:not-allowed; opacity:.42; transform:none; }
+    .primary { width:100%; margin-top:0; background:linear-gradient(135deg, var(--accent), #78f256); color:var(--accent-ink); box-shadow:0 8px 24px rgba(155,255,59,.16); }
+    .ghost { color:var(--text); background:rgba(48,59,80,.55); border:1px solid #3b4962; }
+    .tip { margin:12px 0 0; color:var(--muted); font-size:12px; }
+    .scripts-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
+    .scripts-head .eyebrow { margin-bottom:4px; }
+    .counter { display:inline-grid; place-items:center; width:27px; height:27px; margin-left:7px; border-radius:9px; background:#2b3039; color:var(--muted); font-size:13px; vertical-align:2px; }
+    .placeholder { display:grid; place-items:center; min-height:190px; text-align:center; color:var(--muted); }
+    .placeholder-icon { display:grid; place-items:center; width:54px; height:54px; margin:0 auto 13px; border:1px dashed #555b67; border-radius:18px; font-size:24px; color:var(--violet); }
+    .placeholder p { margin:0; max-width:260px; line-height:1.5; font-size:14px; }
+    .cards { display:grid; gap:14px; }
+    .script-card { border:1px solid var(--line); border-radius:14px; padding:16px; background:rgba(8,11,17,.75); }
+    .script-card-top { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:13px; }
+    .script-card h3 { margin:0; letter-spacing:-.03em; font-size:16px; }
+    .badge { padding:5px 8px; border-radius:99px; color:#d8ffb4; background:rgba(156,255,62,.11); font-size:12px; font-weight:700; white-space:nowrap; }
+    .badge.approved { background:rgba(168,140,255,.16); color:#dccfff; }
+    .script-text { min-height:235px; font-size:14px; }
+    .storyboard { margin-top:18px; }
+    .storyboard-head { display:flex; justify-content:space-between; gap:18px; align-items:end; margin-bottom:18px; }
+    .storyboard-head p { margin:8px 0 0; color:var(--muted); font-size:14px; line-height:1.5; }
+    .frames { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; }
+    .frame { min-height:148px; padding:14px; border:1px solid var(--line); border-radius:14px; background:rgba(8,11,17,.75); display:flex; flex-direction:column; }
+    .frame-number { color:var(--accent); font-size:12px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+    .frame textarea { min-height:104px; flex:1; margin-top:10px; padding:0; border:0; border-radius:0; background:transparent; font-size:14px; }
+    .frame textarea:focus { box-shadow:none; }
+    .prompt-stage { margin-top:18px; }
+    .prompt-stage-head { display:flex; justify-content:space-between; gap:18px; align-items:end; margin-bottom:18px; }
+    .prompt-stage-head p { margin:8px 0 0; color:var(--muted); font-size:14px; line-height:1.5; }
+    .prompts { display:grid; gap:12px; }
+    .prompt-card { position:relative; display:grid; grid-template-columns:118px minmax(0, 1fr); gap:16px; padding:15px 16px; border:1px solid var(--line); border-radius:14px; background:rgba(8,11,17,.75); }
+    .prompt-label { color:var(--accent); font-size:12px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+    .prompt-workspace { min-width:0; }
+    .prompt-links { display:flex; align-items:end; gap:7px; min-height:47px; margin-bottom:8px; }
+    .prompt-links-label { align-self:center; margin-right:3px; color:var(--muted); font-size:10px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; }
+    .prompt-link { display:grid; place-items:center; flex:0 0 43px; width:43px; height:43px; padding:0; overflow:hidden; border:1px solid #38445a; border-radius:9px; background:#141a26; color:var(--text); cursor:pointer; }
+    .prompt-link:hover { border-color:var(--accent); }
+    .prompt-link.style-link { color:var(--muted); font-size:11px; }
+    .prompt-link.reference-link { position:relative; }
+    .prompt-link.reference-link img { width:100%; height:100%; object-fit:cover; }
+    .prompt-link.reference-link span { position:absolute; right:2px; bottom:2px; max-width:39px; overflow:hidden; padding:1px 3px; border-radius:4px; background:rgba(5,8,13,.78); color:var(--text); font-size:8px; text-overflow:ellipsis; white-space:nowrap; }
+    .prompt-link.add-link { color:var(--muted); font-size:20px; }
+    .prompt-editor { position:relative; border:1px solid #425674; border-radius:12px; background:#0a0d14; }
+    .prompt-editor:focus-within { border-color:#8f7cff; box-shadow:0 0 0 2px rgba(143,124,255,.16); }
+    .prompt-editable { min-height:112px; padding:12px; border-radius:12px; outline:0; color:var(--text); font-size:14px; line-height:1.5; white-space:pre-wrap; }
+    .reference-token { display:inline-flex; align-items:center; gap:5px; max-width:154px; margin:0 2px; padding:3px 7px 3px 4px; border:1px solid #4d5b75; border-radius:999px; background:#252b38; color:var(--text); cursor:pointer; vertical-align:middle; }
+    .reference-token:hover { border-color:var(--accent); background:#303a49; }
+    .reference-token img { width:19px; height:19px; border-radius:50%; object-fit:cover; }
+    .reference-token-label { overflow:hidden; font-size:11px; font-weight:700; text-overflow:ellipsis; white-space:nowrap; }
+    .reference-token-arrow { color:var(--muted); font-size:11px; }
+    .reference-suggestions { position:absolute; left:10px; bottom:10px; z-index:8; display:grid; gap:5px; width:min(250px, calc(100% - 20px)); padding:7px; border:1px solid #455875; border-radius:13px; background:rgba(20,23,28,.99); box-shadow:0 16px 36px rgba(0,0,0,.48); }
+    .reference-suggestions[hidden] { display:none; }
+    .reference-suggestions-title { padding:2px 5px 5px; color:var(--muted); font-size:11px; font-weight:700; }
+    .reference-suggestion { display:grid; grid-template-columns:34px minmax(0, 1fr); align-items:center; gap:9px; width:100%; padding:5px; border:0; border-radius:9px; background:transparent; color:var(--text); text-align:left; cursor:pointer; }
+    .reference-suggestion:hover { background:rgba(182,255,59,.12); }
+    .reference-suggestion img { width:34px; height:34px; border-radius:7px; object-fit:cover; }
+    .reference-suggestion strong { display:block; font-size:12px; }
+    .reference-suggestion span { display:block; overflow:hidden; color:var(--muted); font-size:11px; text-overflow:ellipsis; white-space:nowrap; }
+    .help-widget { position:fixed; right:24px; bottom:24px; z-index:20; width:min(330px, calc(100vw - 32px)); border:1px solid #3c4b62; border-radius:16px; background:rgba(16,22,33,.97); box-shadow:0 18px 60px rgba(0,0,0,.4); overflow:hidden; }
+    .help-bar { display:flex; align-items:center; gap:10px; min-height:52px; padding:8px 10px 8px 14px; cursor:grab; user-select:none; }
+    .help-bar:active { cursor:grabbing; }
+    .help-title { flex:1; font-size:14px; font-weight:800; letter-spacing:-.02em; }
+    .help-icon { display:grid; place-items:center; width:27px; height:27px; border-radius:9px; background:rgba(156,255,62,.13); color:var(--accent); }
+    .help-toggle { width:34px; min-height:34px; padding:0; color:var(--text); background:#292d36; border:1px solid #3a3e48; border-radius:10px; cursor:pointer; }
+    .help-content { display:grid; gap:14px; padding:0 16px 16px; border-top:1px solid var(--line); }
+    .help-content p { margin:0; color:var(--muted); font-size:13px; line-height:1.5; }
+    .help-content ol { display:grid; gap:10px; margin:0; padding-left:20px; color:var(--muted); font-size:13px; line-height:1.45; }
+    .help-content strong { color:var(--text); font-weight:700; }
+    .help-widget.is-collapsed .help-content { display:none; }
+    .help-widget.is-collapsed .help-toggle { transform:rotate(180deg); }
+    [hidden] { display:none !important; }
+    @media (max-width:1020px) { .frames { grid-template-columns:repeat(2, minmax(0, 1fr)); } }
+    @media (max-width:760px) { .app { width:min(100% - 24px, 1040px); padding-top:20px; } .hero,.workspace,.idea-fields,.creative-settings { grid-template-columns:1fr; } .hero { gap:14px; margin-bottom:16px; } .scripts-head,.stage-heading { align-items:flex-start; } .storyboard-head,.prompt-stage-head { align-items:flex-start; flex-direction:column; } .frames { grid-template-columns:1fr; } .prompt-card { grid-template-columns:1fr; } .reference-dropzone { max-width:190px; } .idea-actions { align-items:stretch; flex-direction:column; } .idea-panel .idea-actions-left { flex-wrap:wrap; } .idea-actions .primary { width:100%; } .duration-pill { min-width:150px; } .style-grid { grid-template-columns:repeat(2, minmax(0,1fr)); } .help-widget { right:12px; bottom:12px; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="topline"><div class="brand"><span class="brand-mark">✦</span> Viral Script Studio</div><span class="mode">AI workflow / сценарии</span></div>
+    <section class="hero"><h1>Идея → вирусный сценарий.</h1><p>Одна идея превращается в один готовый сценарий с сильным хуком. Редактируй текст, подтверждай результат — и переходи дальше.</p></section>
+    <section class="workspace" aria-label="Создание сценариев">
+      <section class="panel idea-panel">
+        <div class="stage-heading"><div><p class="eyebrow">Шаг 01</p><h2>Ваша идея</h2><p>Опишите мысль, тему или ситуацию для короткого ролика.</p></div><div class="stage-meta"><span class="badge">1 идея = 1 сценарий</span></div></div>
+        <div class="idea-fields"><input id="visual-style" type="hidden" value="Photorealistic cinematic editorial"><div class="idea-copy"><div class="idea-editable" id="idea" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Сюжетная идея" data-placeholder="Опишите идею для видео: сюжет, героя, конфликт или ситуацию…"></div></div><div class="idea-actions"><div class="idea-actions-left"><div class="creative-settings"><button class="creative-tile" id="open-style-modal" type="button"><span class="creative-tile-icon">✦</span><span class="creative-tile-label">Стиль</span></button><div class="field reference-field"><div class="reference-dropzone" id="reference-dropzone"><input id="reference-images" type="file" accept="image/*" multiple><div class="reference-preview" id="reference-preview"></div></div></div><label class="creative-tile" id="add-reference" for="reference-images"><span class="creative-tile-icon">＋</span><span class="creative-tile-label">Добавить</span></label></div><div class="timing-control"><button class="duration-pill" id="timing-toggle" type="button" aria-expanded="false">Указать длину · <span id="timing-button-value">30 сек</span></button><div class="timing-popover" id="timing-popover" hidden><div class="timing-popover-head"><strong>Длительность ролика</strong><span class="timing-value" id="timing-value">30 сек</span></div><input class="timing-range" id="timing-range" type="range" min="0" max="60" value="30"><div class="timing-scale"><span>0 сек</span><span>60 сек</span></div></div></div><div class="model-control"><button class="model-pill" id="model-toggle" type="button" aria-expanded="false">Модель · <span id="model-button-value">Claude Sonnet 4.6</span>⌄</button><div class="model-popover" id="model-popover" hidden><button class="model-choice is-selected" type="button" data-model="Claude Sonnet 4.6"><span><strong>Claude Sonnet 4.6</strong><small>Актуальный сильный баланс</small></span><em class="model-vendor">Anthropic</em></button><button class="model-choice" type="button" data-model="Claude Opus 4.7"><span><strong>Claude Opus 4.7</strong><small>Топовая модель Anthropic</small></span><em class="model-vendor">Anthropic</em></button><button class="model-choice" type="button" data-model="GPT-5.6 Sol"><span><strong>GPT-5.6 Sol</strong><small>Флагман OpenAI</small></span><em class="model-vendor">OpenAI</em></button><button class="model-choice" type="button" data-model="GPT-5.6 Terra"><span><strong>GPT-5.6 Terra</strong><small>Баланс качества и стоимости</small></span><em class="model-vendor">OpenAI</em></button><button class="model-choice" type="button" data-model="Gemini 3.1 Pro Preview"><span><strong>Gemini 3.1 Pro Preview</strong><small>Топовый reasoning от Google</small></span><em class="model-vendor">Google</em></button><button class="model-choice" type="button" data-model="Gemini 3.5 Flash"><span><strong>Gemini 3.5 Flash</strong><small>Новая стабильная быстрая модель</small></span><em class="model-vendor">Google</em></button></div></div></div><button class="button primary" id="generate" type="button">Создать сценарий <span>→</span></button></div></div>
+      </section>
+      <section class="panel scripts-panel">
+        <div class="scripts-head"><div><p class="eyebrow">Результат</p><h2>Сценарии <span class="counter" id="counter">0</span></h2></div><button class="button ghost" id="approve" type="button" disabled>Approve all</button></div>
+        <div id="empty" class="placeholder"><div><div class="placeholder-icon">✦</div><p>Первый сценарий появится здесь после того, как вы добавите идею.</p></div></div>
+        <div class="cards" id="cards"></div>
+      </section>
+    </section>
+    <section class="panel storyboard" id="storyboard" hidden aria-label="Раскадровка">
+      <div class="storyboard-head"><div><p class="eyebrow">Шаг 02</p><h2>Раскадровка</h2><p>LLM разложил сценарий на короткие визуальные идеи. Каждый кадр можно отредактировать перед созданием визуала.</p></div><button class="button ghost" id="approve-frames" type="button" aria-label="Approve all storyboard frames">Approve all</button></div>
+      <div class="frames" id="frames"></div>
+    </section>
+    <section class="panel prompt-stage" id="prompt-stage" hidden aria-label="Промты для фото">
+      <div class="prompt-stage-head"><div><p class="eyebrow">Шаг 03</p><h2>Промты для фото</h2><p>Готовые подробные промты для генератора изображений. Отредактируйте их под свой визуальный стиль.</p></div><span class="badge approved">Image prompts</span></div>
+      <div class="prompts" id="prompts"></div>
+    </section>
+  </main>
+  <div class="style-modal" id="style-modal" hidden role="dialog" aria-modal="true" aria-labelledby="style-modal-title">
+    <div class="style-modal-dialog">
+      <div class="style-modal-head"><div><h2 id="style-modal-title">Выберите визуальный стиль</h2><p>Стиль будет добавлен в промты для всех кадров.</p></div><button class="style-close" id="close-style-modal" type="button" aria-label="Закрыть">×</button></div>
+      <div class="style-grid" id="style-grid">
+        <button class="style-option" type="button" data-style="Photorealistic cinematic editorial" data-preview-position="0 0"><span>Кинореализм</span></button>
+        <button class="style-option" type="button" data-style="Whimsical premium 3D animated film" data-preview-position="50% 0"><span>3D animation</span></button>
+        <button class="style-option" type="button" data-style="Japanese anime film, detailed cel shading" data-preview-position="100% 0"><span>Аниме</span></button>
+        <button class="style-option" type="button" data-style="Premium fashion editorial, glossy magazine lighting" data-preview-position="0 100%"><span>Fashion</span></button>
+        <button class="style-option" type="button" data-style="Dreamy 35mm film still, soft grain" data-preview-position="50% 100%"><span>35mm film</span></button>
+        <button class="style-option" type="button" data-style="Surreal vibrant editorial art direction" data-preview-position="100% 100%"><span>Surreal</span></button>
+      </div>
+    </div>
+  </div>
+  <aside class="help-widget is-collapsed" id="help-widget" aria-label="Справка по работе с редактором">
+    <div class="help-bar" id="help-drag-handle">
+      <span class="help-icon">?</span>
+      <span class="help-title">Как это работает</span>
+      <button class="help-toggle" id="help-toggle" type="button" aria-expanded="false" aria-label="Развернуть справку">⌃</button>
+    </div>
+    <div class="help-content">
+      <p>Пройдите путь от идеи до готовых промтов для визуалов.</p>
+      <ol>
+        <li><strong>Идея:</strong> одна мысль создаёт один сценарий с текстом диктора.</li>
+        <li><strong>Раскадровка:</strong> подтвердите сценарий и отредактируйте идеи кадров.</li>
+        <li><strong>Промты:</strong> подтвердите кадры и получите готовые промты для фото.</li>
+      </ol>
+      <p>Окно можно перетаскивать за верхнюю панель.</p>
+    </div>
+  </aside>
+  <script>
+    const idea = document.querySelector('#idea');
+    const generate = document.querySelector('#generate');
+    const cards = document.querySelector('#cards');
+    const counter = document.querySelector('#counter');
+    const empty = document.querySelector('#empty');
+    const approve = document.querySelector('#approve');
+    const storyboard = document.querySelector('#storyboard');
+    const frames = document.querySelector('#frames');
+    const approveFrames = document.querySelector('#approve-frames');
+    const promptStage = document.querySelector('#prompt-stage');
+    const prompts = document.querySelector('#prompts');
+    const visualStyle = document.querySelector('#visual-style');
+    const referenceImages = document.querySelector('#reference-images');
+    const referencePreview = document.querySelector('#reference-preview');
+    const referenceDropzone = document.querySelector('#reference-dropzone');
+    const helpWidget = document.querySelector('#help-widget');
+    const helpToggle = document.querySelector('#help-toggle');
+    const helpDragHandle = document.querySelector('#help-drag-handle');
+    const timingToggle = document.querySelector('#timing-toggle');
+    const timingPopover = document.querySelector('#timing-popover');
+    const timingRange = document.querySelector('#timing-range');
+    const timingValue = document.querySelector('#timing-value');
+    const timingButtonValue = document.querySelector('#timing-button-value');
+    const openStyleModal = document.querySelector('#open-style-modal');
+    const styleModal = document.querySelector('#style-modal');
+    const closeStyleModal = document.querySelector('#close-style-modal');
+    const styleGrid = document.querySelector('#style-grid');
+    const addReferenceButton = document.querySelector('#add-reference');
+    const modelToggle = document.querySelector('#model-toggle');
+    const modelPopover = document.querySelector('#model-popover');
+    const modelButtonValue = document.querySelector('#model-button-value');
+    let count = 0;
+    let duration = 30;
+    let selectedModel = 'Claude Sonnet 4.6';
+    function buildScript(topic) {
+      return `СЦЕНАРИЙ НА ${duration} СЕКУНД · ${selectedModel}\n\nХУК (0–3 сек.)\n«Ты делаешь это каждый раз — и даже не замечаешь, почему результат не меняется».\n\nСЕТАП\n${topic}. Большинство людей видит здесь только верхушку проблемы.\n\nРАЗВОРОТ\nДело не в силе воли и не в мотивации. Ошибка происходит на шаг раньше — ещё до того, как ты начинаешь действовать.\n\nЦЕННОСТЬ\nСделай один микрошаг, который займёт меньше минуты. Подготовь его заранее: не цель на неделю, а понятный старт на сегодня.\n\nФИНАЛ / CTA\n«Сохрани, чтобы попробовать сегодня. А у тебя где чаще всего всё срывается?»\n\nТЕМП\nРассчитывай подачу и паузы так, чтобы ролик укладывался в ${duration} сек.`;
+    }
+    function refresh() { counter.textContent = count; empty.hidden = count > 0; approve.disabled = count === 0; storyboard.hidden = true; promptStage.hidden = true; }
+    function buildFrames(script) {
+      if (/аргентин|месси/i.test(script)) return [
+        'Месси держит кубок чемпионата мира вместе со сборной Аргентины. Эмоциональный крупный план, золотой конфетти-дождь.',
+        'Игроки сборной смотрят на Месси в раздевалке; над его головой тонкий светящийся нимб. Тёплый драматичный свет.',
+        'Тренировка сборной Аргентины на зелёном поле: команда синхронно бежит к камере, раннее утро, кинематографичный широкий план.',
+        'Крупный план рук, завязывающих шнурки на футбольных бутсах; в отражении виден сине-белый флаг Аргентины.',
+        'Стадион перед матчем: болельщики поднимают сине-белые шарфы, камера медленно проходит сквозь толпу.',
+        'Финальный кадр: Месси и команда поднимают кубок над головой, яркие прожекторы, вертикальный формат для Reels.'
+      ];
+      return [
+        'Сильный крупный план героя: он замечает проблему, короткая эмоциональная пауза, кинематографичный свет.',
+        'Широкий кадр ситуации из сценария — герой в привычной среде, где хорошо виден контекст истории.',
+        'Визуальная метафора главной ошибки: повторяющееся действие, которое выглядит простым, но ведёт не туда.',
+        'Крупный план на микрошаг: руки героя начинают конкретное маленькое действие, которое меняет ход истории.',
+        'Динамичный кадр прогресса: средний план, движение вперёд, больше света и энергии в изображении.',
+        'Финальный вертикальный кадр: герой смотрит в камеру, чистый фон, свободное место под CTA и субтитры.'
+      ];
+    }
+    function renderStoryboard() {
+      const script = document.querySelector('.script-text')?.value || '';
+      frames.innerHTML = '';
+      buildFrames(script).forEach((frameIdea, index) => {
+        const frame = document.createElement('article');
+        frame.className = 'frame';
+        frame.innerHTML = `<span class="frame-number">Кадр ${String(index + 1).padStart(2, '0')}</span><textarea aria-label="Идея для кадра ${index + 1}"></textarea>`;
+        frame.querySelector('textarea').value = frameIdea;
+        frames.append(frame);
+      });
+      storyboard.hidden = false;
+      storyboard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    function createPhotoPrompt(frameIdea) {
+      const imageReferenceInstruction = referenceFiles.length ? ' Match the uploaded character reference images: preserve the same identity, facial features, hairstyle, and wardrobe where relevant.' : '';
+      return `Create a ${visualStyle.value || 'cinematic visual'} image for a vertical social-media video: ${frameIdea}${imageReferenceInstruction} Emotionally expressive, carefully directed composition, soft cinematic lighting, shallow depth of field, high detail, 9:16 vertical frame. No text, no watermark, no logo.`;
+    }
+    function renderPrompts() {
+      prompts.innerHTML = '';
+      [...frames.querySelectorAll('textarea')].forEach((frame, index) => {
+        const card = document.createElement('article');
+        card.className = 'prompt-card';
+        card.innerHTML = `<span class="prompt-label">Промт ${String(index + 1).padStart(2, '0')}</span><div class="prompt-workspace"><div class="prompt-links"><span class="prompt-links-label">Ссылки</span><button class="prompt-link style-link" type="button" data-insert-style="true">Стиль</button><button class="prompt-link add-link" type="button" data-add-reference="true" aria-label="Добавить референс">＋</button></div><div class="prompt-editor"><div class="prompt-editable" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Промт для фото ${index + 1}"></div></div></div>`;
+        const linkBar = card.querySelector('.prompt-links');
+        referenceFiles.forEach((file, referenceIndex) => {
+          const referenceButton = document.createElement('button');
+          referenceButton.type = 'button';
+          referenceButton.className = 'prompt-link reference-link';
+          referenceButton.dataset.insertReference = String(referenceIndex + 1);
+          referenceButton.setAttribute('aria-label', `Добавить image ${referenceIndex + 1}`);
+          referenceButton.innerHTML = `<img alt="" src="${URL.createObjectURL(file)}"><span>@image ${referenceIndex + 1}</span>`;
+          linkBar.insertBefore(referenceButton, linkBar.querySelector('[data-add-reference]'));
+        });
+        const editor = card.querySelector('.prompt-editable');
+        editor.textContent = createPhotoPrompt(frame.value.trim());
+        attachRichReferenceAutocomplete(editor);
+        linkBar.addEventListener('click', (event) => {
+          const referenceButton = event.target.closest('[data-insert-reference]');
+          if (event.target.closest('[data-add-reference]')) { referenceImages.click(); return; }
+          if (event.target.closest('[data-insert-style]')) { editor.focus(); return; }
+          if (!referenceButton) return;
+          insertReferenceToken(editor, Number(referenceButton.dataset.insertReference));
+        });
+        prompts.append(card);
+      });
+      promptStage.hidden = false;
+      promptStage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    function referenceToken(referenceIndex) {
+      const file = referenceFiles[referenceIndex - 1];
+      const token = document.createElement('span');
+      token.className = 'reference-token';
+      token.contentEditable = 'false';
+      token.dataset.referenceIndex = String(referenceIndex);
+      token.setAttribute('role', 'button');
+      token.setAttribute('aria-label', `Сменить image ${referenceIndex}`);
+      token.innerHTML = `<img alt="" src="${URL.createObjectURL(file)}"><span class="reference-token-label">image ${referenceIndex}</span><span class="reference-token-arrow">⌄</span>`;
+      return token;
+    }
+    function placeCaretAfter(node) {
+      const range = document.createRange();
+      range.setStartAfter(node);
+      range.collapse(true);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+    function insertReferenceToken(editor, referenceIndex, replacementRange) {
+      const token = referenceToken(referenceIndex);
+      let range = replacementRange;
+      if (!range) {
+        const selection = window.getSelection();
+        if (selection.rangeCount && editor.contains(selection.getRangeAt(0).commonAncestorContainer)) range = selection.getRangeAt(0);
+        else { range = document.createRange(); range.selectNodeContents(editor); range.collapse(false); }
+      }
+      range.deleteContents();
+      range.insertNode(token);
+      const spacer = document.createTextNode(' ');
+      token.after(spacer);
+      placeCaretAfter(spacer);
+      editor.focus();
+      saveDraft();
+    }
+    function attachRichReferenceAutocomplete(editor) {
+      const suggestionBox = document.createElement('div');
+      suggestionBox.className = 'reference-suggestions';
+      suggestionBox.hidden = true;
+      const richEditorHost = editor.closest('.prompt-editor') || editor.closest('.idea-copy');
+      richEditorHost.append(suggestionBox);
+      let triggerRange;
+      const openChoices = (replacementRange, tokenToReplace) => {
+        if (!referenceFiles.length) return;
+        suggestionBox.innerHTML = '<div class="reference-suggestions-title">Ссылки</div>';
+        referenceFiles.forEach((file, index) => {
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'reference-suggestion';
+          item.innerHTML = `<img alt="" src="${URL.createObjectURL(file)}"><span><strong>image ${index + 1}</strong><span>${file.name}</span></span>`;
+          item.addEventListener('mousedown', (event) => {
+            event.preventDefault();
+            if (tokenToReplace) {
+              const nextToken = referenceToken(index + 1);
+              tokenToReplace.replaceWith(nextToken);
+              placeCaretAfter(nextToken);
+              editor.focus();
+              saveDraft();
+            } else insertReferenceToken(editor, index + 1, replacementRange);
+            suggestionBox.hidden = true;
+          });
+          suggestionBox.append(item);
+        });
+        suggestionBox.hidden = false;
+      };
+      editor.addEventListener('input', () => {
+        const selection = window.getSelection();
+        if (!selection.rangeCount || !referenceFiles.length) { suggestionBox.hidden = true; return; }
+        const range = selection.getRangeAt(0);
+        if (range.startContainer.nodeType !== Node.TEXT_NODE || range.startOffset < 1 || range.startContainer.textContent[range.startOffset - 1] !== '@') { suggestionBox.hidden = true; return; }
+        triggerRange = range.cloneRange();
+        triggerRange.setStart(range.startContainer, range.startOffset - 1);
+        openChoices(triggerRange);
+      });
+      editor.addEventListener('click', (event) => {
+        const token = event.target.closest('.reference-token');
+        if (token) openChoices(null, token);
+      });
+      editor.addEventListener('blur', () => { setTimeout(() => { suggestionBox.hidden = true; }, 160); });
+    }
+    function attachReferenceAutocomplete(textarea) {
+      const suggestionBox = document.createElement('div');
+      suggestionBox.className = 'reference-suggestions';
+      suggestionBox.hidden = true;
+      const autocompleteHost = textarea.closest('.prompt-editor') || textarea.closest('.idea-copy');
+      autocompleteHost.append(suggestionBox);
+      const showSuggestions = () => {
+        const cursor = textarea.selectionStart;
+        const beforeCursor = textarea.value.slice(0, cursor);
+        if (!referenceFiles.length || !beforeCursor.endsWith('@')) { suggestionBox.hidden = true; return; }
+        suggestionBox.dataset.triggerStart = String(cursor - 1);
+        suggestionBox.innerHTML = '<div class="reference-suggestions-title">Добавить референс в промт</div>';
+        referenceFiles.forEach((file, index) => {
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'reference-suggestion';
+          item.innerHTML = `<img alt="" src="${URL.createObjectURL(file)}"><span><strong>image ${index + 1}</strong><span>${file.name}</span></span>`;
+          item.addEventListener('mousedown', (event) => {
+            event.preventDefault();
+            const start = Number(suggestionBox.dataset.triggerStart);
+            const end = textarea.selectionEnd;
+            const referenceToken = `image ${index + 1}`;
+            textarea.value = `${textarea.value.slice(0, start)}${referenceToken}${textarea.value.slice(end)}`;
+            const cursor = start + referenceToken.length;
+            textarea.focus();
+            textarea.setSelectionRange(cursor, cursor);
+            suggestionBox.hidden = true;
+          });
+          suggestionBox.append(item);
+        });
+        suggestionBox.hidden = false;
+      };
+      textarea.addEventListener('input', showSuggestions);
+      textarea.addEventListener('focus', showSuggestions);
+      textarea.addEventListener('blur', () => { setTimeout(() => { suggestionBox.hidden = true; }, 160); });
+    }
+    function addScenario() {
+      const topic = idea.innerText.trim();
+      if (!topic) { idea.focus(); return; }
+      count += 1;
+      const card = document.createElement('article');
+      card.className = 'script-card';
+      card.innerHTML = `<div class="script-card-top"><h3>Сценарий ${count}</h3><span class="badge">Черновик</span></div><label class="description" for="script-${count}">Текст сценария — редактируется</label><textarea class="script-text" id="script-${count}"></textarea>`;
+      card.querySelector('textarea').value = buildScript(topic);
+      cards.append(card); idea.innerHTML = ''; refresh(); saveDraft(); card.querySelector('textarea').focus();
+    }
+    function setDuration(value) {
+      duration = Number(value);
+      timingRange.value = String(duration);
+      const label = `${duration} сек`;
+      timingValue.textContent = label;
+      timingButtonValue.textContent = label;
+    }
+    function setModel(model) {
+      selectedModel = model;
+      modelButtonValue.textContent = model;
+      modelPopover.querySelectorAll('.model-choice').forEach((choice) => choice.classList.toggle('is-selected', choice.dataset.model === model));
+    }
+    function applyStyleChoice(option) {
+      if (!option) return;
+      visualStyle.value = option.dataset.style;
+      openStyleModal.classList.add('is-style-selected');
+      openStyleModal.style.setProperty('--style-preview-position', option.dataset.previewPosition);
+      styleGrid.querySelectorAll('.style-option').forEach((item) => item.classList.toggle('is-selected', item === option));
+    }
+    generate.addEventListener('click', addScenario);
+    idea.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') addScenario(); });
+    timingToggle.addEventListener('click', () => {
+      const isHidden = timingPopover.hidden;
+      timingPopover.hidden = !isHidden;
+      timingToggle.setAttribute('aria-expanded', String(isHidden));
+    });
+    timingRange.addEventListener('input', () => { setDuration(timingRange.value); saveDraft(); });
+    modelToggle.addEventListener('click', () => {
+      const isHidden = modelPopover.hidden;
+      modelPopover.hidden = !isHidden;
+      modelToggle.setAttribute('aria-expanded', String(isHidden));
+    });
+    modelPopover.addEventListener('click', (event) => {
+      const choice = event.target.closest('.model-choice');
+      if (!choice) return;
+      setModel(choice.dataset.model);
+      modelPopover.hidden = true;
+      modelToggle.setAttribute('aria-expanded', 'false');
+      saveDraft();
+    });
+    openStyleModal.addEventListener('click', () => { styleModal.hidden = false; });
+    closeStyleModal.addEventListener('click', () => { styleModal.hidden = true; });
+    styleModal.addEventListener('click', (event) => { if (event.target === styleModal) styleModal.hidden = true; });
+    styleGrid.addEventListener('click', (event) => {
+      const option = event.target.closest('.style-option');
+      if (!option) return;
+      applyStyleChoice(option);
+      styleModal.hidden = true;
+      saveDraft();
+    });
+    document.addEventListener('click', (event) => {
+      if (!event.target.closest('.timing-control')) { timingPopover.hidden = true; timingToggle.setAttribute('aria-expanded', 'false'); }
+      if (!event.target.closest('.model-control')) { modelPopover.hidden = true; modelToggle.setAttribute('aria-expanded', 'false'); }
+    });
+    approve.addEventListener('click', () => { document.querySelectorAll('.badge').forEach(b => { b.textContent = 'Одобрено'; b.classList.add('approved'); }); approve.disabled = true; renderStoryboard(); saveDraft(); });
+    approveFrames.addEventListener('click', () => { approveFrames.disabled = true; approveFrames.textContent = 'Одобрено'; renderPrompts(); saveDraft(); });
+    let referenceFiles = [];
+    function renderReferenceSlots() {
+      referencePreview.innerHTML = '';
+      if (!referenceFiles.length) {
+        const emptySlot = document.createElement('button');
+        emptySlot.type = 'button';
+        emptySlot.className = 'reference-slot is-empty';
+        emptySlot.dataset.addReference = 'true';
+        emptySlot.innerHTML = '<span><span class="reference-empty-icon">♙</span><span class="reference-empty-label">Референсы</span></span>';
+        referencePreview.append(emptySlot);
+        return;
+      }
+      referenceFiles.forEach((file) => {
+        const card = document.createElement('div');
+        card.className = 'reference-card';
+        const slot = document.createElement('div');
+        slot.className = 'reference-slot is-filled';
+        const preview = document.createElement('img');
+        preview.src = URL.createObjectURL(file);
+        preview.alt = `Референс ${file.name}`;
+        const addButton = document.createElement('button');
+        addButton.type = 'button';
+        addButton.className = 'reference-add-overlay';
+        addButton.dataset.addReference = 'true';
+        addButton.setAttribute('aria-label', 'Добавить ещё референсы');
+        addButton.innerHTML = '<span>＋</span>';
+        slot.append(preview, addButton);
+        const clearButton = document.createElement('button');
+        clearButton.type = 'button';
+        clearButton.className = 'clear-reference';
+        clearButton.dataset.removeReference = String(referenceFiles.indexOf(file));
+        clearButton.textContent = 'Очистить';
+        card.append(slot, clearButton);
+        referencePreview.append(card);
+      });
+    }
+    function addReferenceFiles(files) {
+      const newImages = [...files].filter((file) => file.type.startsWith('image/'));
+      const existing = new Set(referenceFiles.map((file) => `${file.name}-${file.size}-${file.lastModified}`));
+      const uniqueImages = newImages.filter((file) => !existing.has(`${file.name}-${file.size}-${file.lastModified}`));
+      if (!uniqueImages.length) return;
+      referenceFiles = [...referenceFiles, ...uniqueImages].slice(0, 5);
+      const transfer = new DataTransfer();
+      referenceFiles.forEach((file) => transfer.items.add(file));
+      referenceImages.files = transfer.files;
+      renderReferenceSlots();
+      persistReferenceFiles();
+    }
+    referenceImages.addEventListener('change', () => {
+      if (referenceImages.files.length) addReferenceFiles(referenceImages.files);
+    });
+    referencePreview.addEventListener('click', (event) => {
+      if (event.target.closest('[data-add-reference]')) { referenceImages.click(); return; }
+      const clearButton = event.target.closest('[data-remove-reference]');
+      if (!clearButton) return;
+      referenceFiles.splice(Number(clearButton.dataset.removeReference), 1);
+      const transfer = new DataTransfer();
+      referenceFiles.forEach((file) => transfer.items.add(file));
+      referenceImages.files = transfer.files;
+      renderReferenceSlots();
+      persistReferenceFiles();
+    });
+    ['dragenter', 'dragover'].forEach((eventName) => referenceDropzone.addEventListener(eventName, (event) => { event.preventDefault(); referenceDropzone.classList.add('is-dragging'); }));
+    ['dragleave', 'drop'].forEach((eventName) => referenceDropzone.addEventListener(eventName, (event) => { event.preventDefault(); referenceDropzone.classList.remove('is-dragging'); }));
+    referenceDropzone.addEventListener('drop', (event) => {
+      addReferenceFiles(event.dataTransfer.files);
+    });
+    renderReferenceSlots();
+    attachRichReferenceAutocomplete(idea);
+    const draftKey = 'viral-script-studio-draft-v1';
+    const referenceDbName = 'viral-script-studio-references-v1';
+    function inputValues(selector) { return [...document.querySelectorAll(selector)].map((field) => field.value); }
+    function saveDraft() {
+      const state = {
+        idea: idea.innerText,
+        visualStyle: visualStyle.value,
+        duration,
+        selectedModel,
+        cardsHtml: cards.innerHTML,
+        scriptValues: inputValues('.script-text'),
+        storyboardVisible: !storyboard.hidden,
+        framesHtml: frames.innerHTML,
+        frameValues: inputValues('#frames textarea'),
+        promptsVisible: !promptStage.hidden,
+        promptsHtml: prompts.innerHTML,
+        promptValues: [...document.querySelectorAll('.prompt-editable')].map((editor) => editor.innerHTML),
+        scriptApproved: approve.disabled && count > 0,
+        framesApproved: approveFrames.disabled
+      };
+      try { localStorage.setItem(draftKey, JSON.stringify(state)); } catch (_) { }
+    }
+    function restoreValues(selector, values) {
+      document.querySelectorAll(selector).forEach((field, index) => { if (values[index] != null) field.value = values[index]; });
+    }
+    function restoreDraft() {
+      let state;
+      try { state = JSON.parse(localStorage.getItem(draftKey)); } catch (_) { return; }
+      if (!state) return;
+      const savedIdea = String(state.idea || '');
+      const invalidIdeaState = /</.test(savedIdea);
+      idea.textContent = invalidIdeaState ? '' : savedIdea;
+      visualStyle.value = state.visualStyle || visualStyle.value;
+      applyStyleChoice(styleGrid.querySelector(`.style-option[data-style="${CSS.escape(visualStyle.value)}"]`));
+      setDuration(state.duration ?? 30);
+      const legacyModels = { 'Claude Sonnet 4': 'Claude Sonnet 4.6', 'Claude Opus 4.1': 'Claude Opus 4.7', 'Gemini 2.5 Flash': 'Gemini 3.5 Flash' };
+      setModel(legacyModels[state.selectedModel] || state.selectedModel || 'Claude Sonnet 4.6');
+      if (state.cardsHtml) {
+        cards.innerHTML = state.cardsHtml;
+        restoreValues('.script-text', state.scriptValues || []);
+        count = (state.scriptValues || []).length;
+        counter.textContent = count;
+        empty.hidden = count > 0;
+      }
+      if (state.storyboardVisible && state.framesHtml) {
+        storyboard.hidden = false;
+        frames.innerHTML = state.framesHtml;
+        restoreValues('#frames textarea', state.frameValues || []);
+      }
+      if (state.promptsVisible && state.promptsHtml) {
+        promptStage.hidden = false;
+        prompts.innerHTML = state.promptsHtml;
+        prompts.querySelectorAll('.prompt-editable').forEach((editor, index) => {
+          if (state.promptValues?.[index] != null) editor.innerHTML = state.promptValues[index];
+          attachRichReferenceAutocomplete(editor);
+        });
+      }
+      approve.disabled = Boolean(state.scriptApproved);
+      approveFrames.disabled = Boolean(state.framesApproved);
+      if (state.framesApproved) approveFrames.textContent = 'Одобрено';
+    }
+    function openReferenceDb() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(referenceDbName, 1);
+        request.onupgradeneeded = () => request.result.createObjectStore('files', { autoIncrement: true });
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+    async function persistReferenceFiles() {
+      try {
+        const db = await openReferenceDb();
+        const transaction = db.transaction('files', 'readwrite');
+        const store = transaction.objectStore('files');
+        store.clear();
+        referenceFiles.forEach((file) => store.add(file));
+        transaction.oncomplete = () => db.close();
+      } catch (_) { }
+    }
+    async function clearReferenceFiles() {
+      try {
+        const db = await openReferenceDb();
+        const transaction = db.transaction('files', 'readwrite');
+        transaction.objectStore('files').clear();
+        transaction.oncomplete = () => db.close();
+      } catch (_) { }
+    }
+    async function restoreReferenceFiles() {
+      try {
+        const db = await openReferenceDb();
+        const transaction = db.transaction('files', 'readonly');
+        const request = transaction.objectStore('files').getAll();
+        request.onsuccess = () => { referenceFiles = request.result || []; renderReferenceSlots(); db.close(); };
+      } catch (_) { }
+    }
+    document.addEventListener('input', (event) => {
+      if (event.target.matches('#idea, #visual-style, .script-text, #frames textarea, .prompt-editable')) saveDraft();
+    });
+    restoreDraft();
+    restoreReferenceFiles();
+    helpToggle.addEventListener('click', () => {
+      const collapsed = helpWidget.classList.toggle('is-collapsed');
+      helpToggle.setAttribute('aria-expanded', String(!collapsed));
+      helpToggle.setAttribute('aria-label', collapsed ? 'Развернуть справку' : 'Свернуть справку');
+    });
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+    let draggingHelp = false;
+    helpDragHandle.addEventListener('pointerdown', (event) => {
+      if (event.target.closest('button')) return;
+      const bounds = helpWidget.getBoundingClientRect();
+      dragOffsetX = event.clientX - bounds.left;
+      dragOffsetY = event.clientY - bounds.top;
+      draggingHelp = true;
+      helpDragHandle.setPointerCapture(event.pointerId);
+    });
+    helpDragHandle.addEventListener('pointermove', (event) => {
+      if (!draggingHelp) return;
+      const maxX = window.innerWidth - helpWidget.offsetWidth;
+      const maxY = window.innerHeight - helpWidget.offsetHeight;
+      const x = Math.min(Math.max(0, event.clientX - dragOffsetX), maxX);
+      const y = Math.min(Math.max(0, event.clientY - dragOffsetY), maxY);
+      helpWidget.style.left = `${x}px`;
+      helpWidget.style.top = `${y}px`;
+      helpWidget.style.right = 'auto';
+      helpWidget.style.bottom = 'auto';
+    });
+    helpDragHandle.addEventListener('pointerup', () => { draggingHelp = false; });
+    helpDragHandle.addEventListener('pointercancel', () => { draggingHelp = false; });
+  </script>
+</body>
+</html>

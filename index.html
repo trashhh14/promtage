@@ -306,6 +306,7 @@
       <p>Окно можно перетаскивать за верхнюю панель.</p>
     </div>
   </aside>
+  <script src="script-engine.js"></script>
   <script>
     const idea = document.querySelector('#idea');
     const generate = document.querySelector('#generate');
@@ -341,8 +342,28 @@
     let count = 0;
     let duration = 30;
     let selectedModel = 'Claude Sonnet 4.6';
-    function buildScript(topic) {
-      return `СЦЕНАРИЙ НА ${duration} СЕКУНД · ${selectedModel}\n\nХУК (0–3 сек.)\n«Ты делаешь это каждый раз — и даже не замечаешь, почему результат не меняется».\n\nСЕТАП\n${topic}. Большинство людей видит здесь только верхушку проблемы.\n\nРАЗВОРОТ\nДело не в силе воли и не в мотивации. Ошибка происходит на шаг раньше — ещё до того, как ты начинаешь действовать.\n\nЦЕННОСТЬ\nСделай один микрошаг, который займёт меньше минуты. Подготовь его заранее: не цель на неделю, а понятный старт на сегодня.\n\nФИНАЛ / CTA\n«Сохрани, чтобы попробовать сегодня. А у тебя где чаще всего всё срывается?»\n\nТЕМП\nРассчитывай подачу и паузы так, чтобы ролик укладывался в ${duration} сек.`;
+    function engineRequest(topic) {
+      return window.SCRIPT_ENGINE.createRequest({
+        idea: topic,
+        style: visualStyle.value || 'cinematic visual',
+        duration,
+        model: selectedModel,
+        references: referenceFiles
+      });
+    }
+    function buildScriptPreview(request) {
+      const characters = referenceFiles.length
+        ? `Герой из image 1${referenceFiles.length > 1 ? ' и остальные загруженные персонажи' : ''}`
+        : 'Главный герой';
+      const style = visualStyle.value || 'кинематографичный визуальный стиль';
+      const topic = request.user.split('User idea:\n')[1]?.split('\n\nVisual style:')[0]?.trim() || 'идеи пользователя';
+      return `### Title\nТочка, после которой нельзя вернуться\n\n### Core Idea\n${characters} оказывается внутри ситуации «${topic}», где привычное действие меняет правила реальности. Визуальный конфликт развивается по одному ясному принципу и приводит к эмоциональному перевороту.\n\n### Script\n${characters} уже в действии, когда привычная деталь внезапно начинает вести себя не так, как должна. Вместо объяснения герой пытается вернуть всё на место, но каждый его шаг усиливает странность и заставляет мир вокруг отвечать на его решение. В этом движении проявляется настоящий конфликт идеи: то, что казалось простым, требует от героя сделать выбор. Он перестаёт бороться с изменением и использует новое правило в свою пользу. Пространство вокруг собирается в один сильный образ, в котором становится ясно, что изменилось не только окружение, но и сам герой.\n\n### Visual Direction\n${style}. Вертикальная композиция 9:16, выразительный свет, конкретные фактуры и движение, которое нарастает вместе с конфликтом. Загруженные персонажи сохраняют свою внешность и узнаваемость во всех сценах.\n\n### Final Image\n${characters} замирает в новом, уже преобразившемся пространстве — одно простое изображение полностью переосмысляет начало истории.`;
+    }
+    async function generateWithScriptEngine(topic) {
+      const request = engineRequest(topic);
+      window.__lastScriptEngineRequest = request;
+      if (typeof window.scriptEngineGenerate === 'function') return window.scriptEngineGenerate(request);
+      return buildScriptPreview(request);
     }
     function refresh() { counter.textContent = count; empty.hidden = count > 0; approve.disabled = count === 0; storyboard.hidden = true; promptStage.hidden = true; }
     function buildFrames(script) {
@@ -527,15 +548,26 @@
       textarea.addEventListener('focus', showSuggestions);
       textarea.addEventListener('blur', () => { setTimeout(() => { suggestionBox.hidden = true; }, 160); });
     }
-    function addScenario() {
+    async function addScenario() {
       const topic = idea.innerText.trim();
       if (!topic) { idea.focus(); return; }
+      generate.disabled = true;
+      generate.textContent = 'Собираем сценарий…';
       count += 1;
       const card = document.createElement('article');
       card.className = 'script-card';
       card.innerHTML = `<div class="script-card-top"><h3>Сценарий ${count}</h3><span class="badge">Черновик</span></div><label class="description" for="script-${count}">Текст сценария — редактируется</label><textarea class="script-text" id="script-${count}"></textarea>`;
-      card.querySelector('textarea').value = buildScript(topic);
-      cards.append(card); idea.innerHTML = ''; refresh(); saveDraft(); card.querySelector('textarea').focus();
+      try {
+        card.querySelector('textarea').value = await generateWithScriptEngine(topic);
+        cards.append(card); idea.innerHTML = ''; refresh(); saveDraft(); card.querySelector('textarea').focus();
+      } catch (error) {
+        count -= 1;
+        card.remove();
+        alert('Не удалось получить сценарий. Проверьте подключение модели и попробуйте ещё раз.');
+      } finally {
+        generate.disabled = false;
+        generate.innerHTML = 'Создать сценарий <span>→</span>';
+      }
     }
     function setDuration(value) {
       duration = Number(value);

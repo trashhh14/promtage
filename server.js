@@ -44,8 +44,7 @@ async function generateScenario(request, response) {
     headers: {
       Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
-      'HTTP-Referer': `http://127.0.0.1:${process.env.PORT || 4174}`,
-      'X-Title': 'Viral Script Studio'
+      'User-Agent': 'Viral Script Studio/1.0'
     },
     body: JSON.stringify({
       model: body.model || 'openrouter/auto',

@@ -276,6 +276,46 @@
       .api-bar { grid-template-columns:1fr; }
       .api-provider { width:100%; }
     }
+    @media (min-width:761px) {
+      .app { width:min(1180px, calc(100% - 64px)); padding:30px 0 76px; }
+      .topline { margin-bottom:12px; }
+      .brand { font-size:15px; }
+      .brand-mark { width:30px; height:30px; border-radius:9px; font-size:16px; }
+      .mode { font-size:12px; }
+      .api-bar { display:grid; grid-template-columns:auto 132px minmax(300px, 1fr) auto auto; gap:9px; margin:0 0 28px; padding:10px 12px; border-radius:12px; }
+      .api-bar-title { padding:0 3px; font-size:10px; }
+      .api-provider,.api-key-input { min-height:36px; }
+      .api-remember,.api-status { font-size:11px; }
+      .hero { grid-template-columns:minmax(0, 1fr) 330px; gap:54px; margin-bottom:26px; padding:14px 0 24px; }
+      h1 { max-width:760px; font-size:54px; line-height:.98; letter-spacing:-.065em; }
+      .hero p { max-width:330px; margin-bottom:1px; font-size:14px; line-height:1.45; }
+      .panel { border-radius:16px; box-shadow:0 16px 46px rgba(0,0,0,.18); }
+      .idea-panel,.scripts-panel,.storyboard,.prompt-stage { padding:20px; }
+      .stage-heading { align-items:center; margin-bottom:14px; }
+      .stage-heading p { margin-top:5px; font-size:13px; }
+      .stage-heading h2 { font-size:21px; }
+      .idea-panel .idea-editable { min-height:146px; padding:16px; font-size:15px; line-height:1.55; }
+      .idea-panel .idea-actions { display:grid; grid-template-columns:minmax(0, 1fr) auto; align-items:center; gap:18px; margin-top:14px; }
+      .idea-panel .idea-actions-left { display:flex; align-items:center; min-width:0; gap:10px; }
+      .idea-panel .creative-settings { display:flex; align-items:center; gap:8px; }
+      .creative-tile,.reference-field .reference-slot { width:60px; height:60px; border-radius:10px; }
+      .reference-card { width:60px; gap:3px; }
+      .clear-reference { width:60px; font-size:8px; }
+      .creative-tile-icon { font-size:21px; }
+      .creative-tile-label,.reference-empty-label { font-size:8px; }
+      .reference-empty-icon { font-size:20px; }
+      .duration-pill,.model-pill { min-width:0; min-height:38px; padding:0 12px; border-radius:10px; font-size:10px; letter-spacing:.055em; }
+      .duration-pill { width:176px; }
+      .model-pill { width:205px; }
+      .idea-actions .primary { min-width:196px; min-height:44px; padding:0 16px; border-radius:11px; font-size:13px; }
+      .scripts-head { margin-bottom:10px; }
+      .placeholder { min-height:178px; }
+      .help-widget { right:28px; bottom:28px; width:270px; border-radius:14px; }
+      .help-bar { min-height:44px; padding:6px 8px 6px 11px; }
+      .help-title { font-size:12px; }
+      .help-icon { width:23px; height:23px; border-radius:7px; font-size:13px; }
+      .help-toggle { width:28px; min-height:28px; border-radius:8px; }
+    }
   </style>
 </head>
 <body>

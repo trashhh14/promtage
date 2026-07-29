@@ -427,6 +427,22 @@
     async function generateWithScriptEngine(topic) {
       const request = engineRequest(topic);
       window.__lastScriptEngineRequest = request;
+      const localResponse = await fetch('/api/workflow/scenario', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: modelIds[selectedModel] || 'openrouter/auto',
+          system: request.system,
+          user: request.user,
+          apiKey: apiKey.value.trim() || undefined
+        })
+      }).catch(() => null);
+      if (localResponse && localResponse.status !== 404) {
+        const payload = await localResponse.json().catch(() => ({}));
+        if (!localResponse.ok) throw new Error(payload?.error || 'Локальный сервер не смог выполнить запрос.');
+        if (!payload.output) throw new Error('Локальный сервер вернул пустой ответ.');
+        return payload.output;
+      }
       if (apiProvider.value === 'openrouter' && apiKey.value.trim()) {
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',

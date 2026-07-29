@@ -57,8 +57,14 @@ async function generateScenario(request, response) {
     })
   });
 
-  const payload = await upstream.json().catch(() => ({}));
-  if (!upstream.ok) return sendJson(response, upstream.status, { error: payload?.error?.message || 'OpenRouter не смог выполнить запрос.' });
+  const rawPayload = await upstream.text();
+  let payload = {};
+  try { payload = JSON.parse(rawPayload); } catch (_) { }
+  if (!upstream.ok) {
+    const message = payload?.error?.message || payload?.error || payload?.message || rawPayload || 'OpenRouter не смог выполнить запрос.';
+    console.error(`OpenRouter ${upstream.status}: ${String(message).slice(0, 500)}`);
+    return sendJson(response, upstream.status, { error: `OpenRouter ${upstream.status}: ${String(message).slice(0, 500)}` });
+  }
   const output = payload?.choices?.[0]?.message?.content;
   if (!output) return sendJson(response, 502, { error: 'OpenRouter вернул пустой ответ.' });
   sendJson(response, 200, { output });

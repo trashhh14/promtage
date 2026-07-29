@@ -367,7 +367,7 @@
     .idea-char-count { display:block; margin-top:8px; color:var(--subtle); font-size:12px; text-align:right; }
     .idea-panel .idea-actions { display:grid; grid-template-columns:minmax(0, 1fr) auto; gap:18px; margin-top:18px; }
     .idea-panel .idea-actions-left { flex-wrap:wrap; gap:10px; }
-    .idea-panel .creative-settings { gap:10px; }
+    .idea-panel .creative-settings { align-items:flex-start; gap:10px; }
     .creative-tile { display:flex; align-items:center; justify-content:center; width:64px; min-width:64px; height:64px; gap:0; padding:0; border-color:var(--strong-line); border-radius:13px; background:#12192a; }
     .creative-tile-icon { font-size:22px; }
     .creative-tile-label { margin:0; color:#c9d0de; font-size:10px; letter-spacing:.04em; }
@@ -375,7 +375,7 @@
     .creative-tile.is-style-selected { background-size:180px auto; background-position:var(--style-preview-position, 0 0); }
     .creative-tile.is-style-selected .creative-tile-label { background:rgba(6,10,18,.72); }
     .reference-field .reference-preview { gap:8px; }
-    .reference-card { width:64px; }
+    .reference-card { position:relative; display:block; width:64px; height:64px; }
     .reference-field .reference-slot { width:64px; height:64px; border-radius:13px; overflow:hidden; isolation:isolate; }
     .reference-field .reference-slot.is-filled .reference-add-overlay { inset:0; border-radius:inherit; overflow:hidden; }
     .reference-field .reference-slot.is-filled .reference-add-overlay span { width:28px; height:28px; border-radius:9px; font-size:22px; line-height:28px; }
@@ -383,7 +383,7 @@
     .reference-slot.is-empty > span { display:flex; flex-direction:column; align-items:center; gap:4px; }
     .reference-empty-icon { display:block; font-size:18px; }
     .reference-empty-label { margin:0; font-size:12px; letter-spacing:.02em; }
-    .clear-reference { width:64px; font-size:8px; }
+    .clear-reference { position:absolute; top:calc(100% + 4px); left:0; width:64px; font-size:8px; line-height:10px; }
     .duration-pill,.model-pill { min-width:0; min-height:64px; padding:0 18px; border-color:var(--strong-line); border-radius:13px; background:#12192a; font-size:12px; letter-spacing:0; text-transform:none; }
     .duration-pill { width:156px; }
     .model-pill { width:236px; }

@@ -155,7 +155,9 @@
     .storyboard-head p { margin:8px 0 0; color:var(--muted); font-size:14px; line-height:1.5; }
     .frames { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; }
     .frame { min-height:148px; padding:14px; border:1px solid var(--line); border-radius:14px; background:rgba(8,11,17,.75); display:flex; flex-direction:column; }
+    .frame-top { display:flex; align-items:center; justify-content:space-between; gap:8px; }
     .frame-number { color:var(--accent); font-size:12px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+    .frame-duration { padding:4px 7px; border:1px solid rgba(182,255,59,.3); border-radius:99px; background:rgba(182,255,59,.09); color:#d8ffb4; font-size:11px; font-weight:800; white-space:nowrap; }
     .frame textarea { min-height:104px; flex:1; margin-top:10px; padding:0; border:0; border-radius:0; background:transparent; font-size:14px; }
     .frame textarea:focus { box-shadow:none; }
     .prompt-stage { margin-top:18px; }
@@ -338,6 +340,7 @@
     </div>
   </aside>
   <script src="script-engine.js"></script>
+  <script src="storyboard-engine.js"></script>
   <script>
     const idea = document.querySelector('#idea');
     const generate = document.querySelector('#generate');
@@ -754,6 +757,80 @@
       if (!event.target.closest('.timing-control')) { timingPopover.hidden = true; timingToggle.setAttribute('aria-expanded', 'false'); }
       if (!event.target.closest('.model-control')) { modelPopover.hidden = true; modelToggle.setAttribute('aria-expanded', 'false'); }
     });
+    function fitStoryboardDurations(items) {
+      const usable = items.filter((item) => String(item.visual || '').trim()).slice(0, Math.max(1, duration));
+      if (!usable.length) throw new Error('Storyboard Engine не вернул ни одного кадра.');
+      const weights = usable.map((item) => Math.max(1, Number(item.duration) || 3));
+      const totalWeight = weights.reduce((sum, value) => sum + value, 0);
+      const ideal = weights.map((weight) => (weight / totalWeight) * duration);
+      const values = ideal.map((value) => Math.max(1, Math.floor(value)));
+      let difference = duration - values.reduce((sum, value) => sum + value, 0);
+      ideal.map((value, index) => ({ index, fraction: value - Math.floor(value) })).sort((a, b) => b.fraction - a.fraction).forEach(({ index }) => { if (difference > 0) { values[index] += 1; difference -= 1; } });
+      while (difference < 0) {
+        const index = values.findIndex((value) => value > 1);
+        if (index < 0) break;
+        values[index] -= 1;
+        difference += 1;
+      }
+      return usable.map((item, index) => ({ ...item, duration: values[index] }));
+    }
+    function parseStoryboardOutput(output) {
+      const json = output.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+      const parsed = JSON.parse(json);
+      if (!Array.isArray(parsed.frames)) throw new Error('Storyboard Engine вернул ответ не в формате кадров.');
+      return fitStoryboardDurations(parsed.frames);
+    }
+    async function generateStoryboard(script) {
+      const request = window.STORYBOARD_ENGINE.createRequest({ script, style: visualStyle.value || 'cinematic visual', duration, references: referenceFiles });
+      const localResponse = await fetch('/api/workflow/storyboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: modelIds[selectedModel] || 'openrouter/auto', system: request.system, user: request.user, apiKey: apiKey.value.trim() || undefined })
+      }).catch(() => null);
+      if (localResponse && localResponse.status !== 404) {
+        const payload = await localResponse.json().catch(() => ({}));
+        if (!localResponse.ok) {
+          const blockedByPolicy = localResponse.status === 403 && /access denied by security policy/i.test(String(payload?.error || ''));
+          if (blockedByPolicy && apiKey.value.trim()) return parseStoryboardOutput(await requestOpenRouterDirect(request));
+          throw new Error(payload?.error || 'Не удалось создать раскадровку.');
+        }
+        return parseStoryboardOutput(payload.output);
+      }
+      if (apiKey.value.trim()) return parseStoryboardOutput(await requestOpenRouterDirect(request));
+      return fitStoryboardDurations(buildFrames(script).map((visual) => ({ visual, duration: 3, voiceover: '' })));
+    }
+    function renderStoryboard(frameItems) {
+      frames.innerHTML = '';
+      frameItems.forEach((frameItem, index) => {
+        const frame = document.createElement('article');
+        frame.className = 'frame';
+        frame.dataset.duration = String(frameItem.duration);
+        frame.innerHTML = `<div class="frame-top"><span class="frame-number">Кадр ${String(index + 1).padStart(2, '0')}</span><span class="frame-duration">${frameItem.duration} сек</span></div><textarea aria-label="Идея для кадра ${index + 1}"></textarea>`;
+        frame.querySelector('textarea').value = frameItem.visual;
+        frames.append(frame);
+      });
+      storyboard.hidden = false;
+      storyboard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    approve.addEventListener('click', async (event) => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const script = document.querySelector('.script-text')?.value.trim();
+      if (!script) return;
+      approve.disabled = true;
+      approve.textContent = 'Создаём кадры…';
+      try {
+        const frameItems = await generateStoryboard(script);
+        document.querySelectorAll('.script-card .badge').forEach((badge) => { badge.textContent = 'Одобрено'; badge.classList.add('approved'); });
+        renderStoryboard(frameItems);
+        clearApiError();
+        saveDraft();
+      } catch (error) {
+        approve.disabled = false;
+        approve.textContent = 'Approve all';
+        showApiError(error.message || 'Не удалось создать раскадровку.');
+      }
+    }, true);
     approve.addEventListener('click', () => { document.querySelectorAll('.badge').forEach(b => { b.textContent = 'Одобрено'; b.classList.add('approved'); }); approve.disabled = true; renderStoryboard(); saveDraft(); });
     approveFrames.addEventListener('click', () => { approveFrames.disabled = true; approveFrames.textContent = 'Одобрено'; renderPrompts(); saveDraft(); });
     let referenceFiles = [];

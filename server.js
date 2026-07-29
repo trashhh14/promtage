@@ -72,7 +72,7 @@ async function generateScenario(request, response) {
 http.createServer(async (request, response) => {
   try {
     const url = new URL(request.url, 'http://127.0.0.1');
-    if (request.method === 'POST' && url.pathname === '/api/workflow/scenario') return generateScenario(request, response);
+    if (request.method === 'POST' && ['/api/workflow/scenario', '/api/workflow/storyboard'].includes(url.pathname)) return generateScenario(request, response);
     if (request.method !== 'GET' && request.method !== 'HEAD') return sendJson(response, 405, { error: 'Method not allowed' });
 
     const relativePath = url.pathname === '/' ? '/index.html' : url.pathname;

@@ -7,7 +7,7 @@
   <style>
     :root { color-scheme:dark; --bg:#080a10; --panel:#11151f; --panel-2:#191f2c; --text:#f8faff; --muted:#9ca7bd; --line:#2a3447; --accent:#b6ff3b; --accent-ink:#122000; --violet:#8f7cff; }
     * { box-sizing:border-box; }
-    body { margin:0; min-width:320px; background:radial-gradient(circle at 92% 0%, rgba(95,67,191,.38) 0, transparent 34rem),radial-gradient(circle at -5% 34%, rgba(63,157,151,.16) 0, transparent 32rem),var(--bg); color:var(--text); font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { margin:0; min-width:320px; background:radial-gradient(circle at 92% 0%, rgba(95,67,191,.38) 0, transparent 34rem),radial-gradient(circle at -5% 34%, rgba(63,157,151,.16) 0, transparent 32rem),var(--bg); color:var(--text); font-family:Inter, "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif; font-synthesis:none; }
     button, textarea, select, input { font:inherit; }
     .app { width:min(1440px, calc(100% - 48px)); margin:0 auto; padding:28px 0 64px; }
     .topline { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:26px; }
@@ -52,12 +52,12 @@
     .eyebrow { margin:0 0 7px; color:var(--accent); font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
     h2 { margin:0; font-size:24px; letter-spacing:-.045em; }
     .description { margin:7px 0 10px; color:var(--muted); font-size:14px; line-height:1.45; }
-    textarea { width:100%; color:var(--text); border:1px solid var(--line); border-radius:12px; background:#0b0e15; padding:13px; outline:none; resize:vertical; line-height:1.45; }
+    textarea { width:100%; color:var(--text) !important; -webkit-text-fill-color:var(--text); border:1px solid var(--line); border-radius:12px; background:#0b0e15; padding:13px; outline:none; resize:vertical; line-height:1.5; font-family:inherit; font-weight:500; caret-color:var(--accent); }
     textarea:focus { border-color:var(--violet); box-shadow:0 0 0 3px rgba(168,140,255,.16); }
     .idea-fields { position:relative; z-index:1; display:grid; grid-template-columns:minmax(0, 1fr) 235px; gap:16px; align-items:start; }
     .idea-copy { position:relative; min-width:0; }
     #idea { min-height:182px; font-size:15px; background:rgba(5,8,14,.68); }
-    .idea-editable { width:100%; padding:13px; border:1px solid var(--line); border-radius:12px; color:var(--text); outline:0; line-height:1.45; white-space:pre-wrap; }
+    .idea-editable { width:100%; padding:13px; border:1px solid var(--line); border-radius:12px; color:var(--text) !important; -webkit-text-fill-color:var(--text); outline:0; line-height:1.5; white-space:pre-wrap; font-family:inherit; font-weight:500; caret-color:var(--accent); }
     .idea-editable:focus { border-color:var(--violet); box-shadow:0 0 0 3px rgba(168,140,255,.16); }
     .idea-editable:empty::before { content:attr(data-placeholder); color:#7d879a; pointer-events:none; }
     .creative-settings { display:grid; gap:14px; }
@@ -175,7 +175,8 @@
     .prompt-link.add-link { color:var(--muted); font-size:20px; }
     .prompt-editor { position:relative; border:1px solid #425674; border-radius:12px; background:#0a0d14; }
     .prompt-editor:focus-within { border-color:#8f7cff; box-shadow:0 0 0 2px rgba(143,124,255,.16); }
-    .prompt-editable { min-height:112px; padding:12px; border-radius:12px; outline:0; color:var(--text); font-size:14px; line-height:1.5; white-space:pre-wrap; }
+    .prompt-editable { min-height:112px; padding:12px; border-radius:12px; outline:0; color:var(--text) !important; -webkit-text-fill-color:var(--text); font-size:14px; font-weight:500; line-height:1.55; white-space:pre-wrap; caret-color:var(--accent); }
+    .idea-editable::selection,.prompt-editable::selection,textarea::selection { background:rgba(182,255,59,.28); color:#fff; -webkit-text-fill-color:#fff; }
     .reference-token { display:inline-flex; align-items:center; gap:5px; max-width:154px; margin:0 2px; padding:3px 7px 3px 4px; border:1px solid #4d5b75; border-radius:999px; background:#252b38; color:var(--text); cursor:pointer; vertical-align:middle; }
     .reference-token:hover { border-color:var(--accent); background:#303a49; }
     .reference-token img { width:19px; height:19px; border-radius:50%; object-fit:cover; }

@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Viral Script Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <style>
     :root { color-scheme:dark; --bg:#080a10; --panel:#11151f; --panel-2:#191f2c; --text:#f8faff; --muted:#9ca7bd; --line:#2a3447; --accent:#b6ff3b; --accent-ink:#122000; --violet:#8f7cff; }
     * { box-sizing:border-box; }
@@ -316,10 +318,111 @@
       .help-icon { width:23px; height:23px; border-radius:7px; font-size:13px; }
       .help-toggle { width:28px; min-height:28px; border-radius:8px; }
     }
+    /* Workflow shell — the interface uses Tailwind for structural utilities and these reusable component tokens. */
+    :root { --bg:#070a12; --panel:#0d1220; --panel-2:#12192a; --hover:#172033; --text:#f4f7fb; --muted:#8993a8; --subtle:#5e687c; --line:rgba(255,255,255,.08); --strong-line:rgba(255,255,255,.14); --accent:#9bff42; --violet:#8b7cff; }
+    body { background:radial-gradient(circle at 88% -10%, rgba(139,124,255,.14), transparent 32rem), #070a12; }
+    .app-shell { width:min(1440px, 100%); margin:0 auto; padding:20px 28px 80px; }
+    .app-header { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:20px; min-height:50px; padding:0 0 18px; border-bottom:1px solid var(--line); }
+    .app-logo { display:flex; align-items:center; gap:9px; color:var(--text); font-size:14px; font-weight:700; letter-spacing:-.03em; text-decoration:none; }
+    .app-logo-mark { display:grid; place-items:center; width:28px; height:28px; border-radius:9px; background:var(--accent); color:#18250e; font-size:15px; box-shadow:none; }
+    .project-meta { display:flex; align-items:center; gap:10px; min-width:0; }
+    .project-name { overflow:hidden; color:var(--muted); font-size:13px; text-overflow:ellipsis; white-space:nowrap; }
+    .save-state { color:var(--subtle); font-size:12px; }
+    .save-state::before { content:'•'; margin-right:5px; color:var(--accent); }
+    .header-actions { display:flex; align-items:center; gap:8px; }
+    .header-connection,.header-settings { min-height:34px; border:1px solid var(--line); border-radius:10px; background:rgba(13,18,32,.72); color:var(--muted); cursor:pointer; }
+    .header-connection { display:flex; align-items:center; gap:7px; padding:0 10px; font-size:12px; }
+    .header-connection:hover,.header-settings:hover { border-color:var(--strong-line); background:var(--hover); color:var(--text); }
+    .connection-dot { width:7px; height:7px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 3px rgba(155,255,66,.1); }
+    .header-model { max-width:140px; overflow:hidden; padding-left:7px; border-left:1px solid var(--line); color:#c7cedd; text-overflow:ellipsis; white-space:nowrap; }
+    .header-settings { width:34px; padding:0; font-size:15px; }
+    .app-layout { display:grid; grid-template-columns:184px minmax(0, 1fr); gap:32px; padding-top:30px; }
+    .workflow-sidebar { display:grid; align-content:start; gap:4px; position:sticky; top:20px; height:max-content; padding:8px; border:1px solid var(--line); border-radius:16px; background:rgba(13,18,32,.66); }
+    .workflow-step { display:grid; grid-template-columns:28px minmax(0, 1fr) 12px; align-items:center; width:100%; min-height:42px; gap:7px; padding:0 9px; border:0; border-radius:10px; background:transparent; color:var(--muted); text-align:left; cursor:pointer; }
+    .workflow-step:hover { background:var(--hover); color:var(--text); }
+    .workflow-step span { color:var(--subtle); font-size:11px; font-variant-numeric:tabular-nums; }
+    .workflow-step strong { font-size:13px; font-weight:600; }
+    .workflow-step i { color:var(--subtle); font-size:10px; font-style:normal; }
+    .workflow-step.is-active { background:rgba(139,124,255,.13); color:var(--text); }
+    .workflow-step.is-active span,.workflow-step.is-active i { color:var(--violet); }
+    .workflow-step.is-complete i { color:var(--accent); }
+    .workflow-step.is-locked { opacity:.42; }
+    .app { width:auto !important; min-width:0; margin:0 !important; padding:0 !important; }
+    .topline { display:none; }
+    .app > .api-bar { display:none; }
+    .hero { grid-template-columns:minmax(0, 1fr) 360px; gap:48px; margin:0 0 28px; padding:0 0 26px; border-color:var(--line); }
+    h1 { max-width:760px; font-size:clamp(36px, 4vw, 48px); line-height:1.02; letter-spacing:-.055em; }
+    .hero p { max-width:360px; color:var(--muted); font-size:14px; line-height:1.55; }
+    .panel { border-color:var(--line); border-radius:18px; background:var(--panel); box-shadow:0 14px 36px rgba(0,0,0,.14); }
+    .idea-panel,.scripts-panel,.storyboard,.prompt-stage { padding:24px; }
+    .idea-panel { background:var(--panel); border-color:var(--strong-line); }
+    .idea-panel::after { display:none; }
+    .stage-heading { align-items:flex-start; margin-bottom:20px; }
+    .stage-heading h2 { font-size:22px; letter-spacing:-.035em; }
+    .stage-heading p { font-size:14px; }
+    .eyebrow { color:var(--violet); font-size:10px; }
+    .badge { background:rgba(139,124,255,.13); color:#cfc8ff; font-size:11px; }
+    .idea-panel .idea-editable { min-height:190px; padding:16px; border-color:var(--strong-line); border-radius:14px; background:#0a0f1b; font-size:16px; line-height:1.55; }
+    .idea-panel .idea-editable:focus { border-color:rgba(139,124,255,.8); box-shadow:0 0 0 3px rgba(139,124,255,.11); }
+    .idea-char-count { display:block; margin-top:8px; color:var(--subtle); font-size:12px; text-align:right; }
+    .idea-panel .idea-actions { display:grid; grid-template-columns:minmax(0, 1fr) auto; gap:16px; margin-top:16px; }
+    .idea-panel .idea-actions-left { flex-wrap:wrap; gap:8px; }
+    .idea-panel .creative-settings { gap:8px; }
+    .creative-tile { display:flex; align-items:center; justify-content:flex-start; width:auto; min-width:112px; height:42px; gap:8px; padding:0 12px; border-color:var(--strong-line); border-radius:11px; background:#12192a; }
+    .creative-tile-icon { font-size:17px; }
+    .creative-tile-label { margin:0; color:#c9d0de; font-size:11px; letter-spacing:.03em; }
+    .creative-tile.is-style-selected { background-size:180px auto; background-position:var(--style-preview-position, 0 0); }
+    .creative-tile.is-style-selected .creative-tile-label { background:rgba(6,10,18,.72); }
+    .reference-field .reference-preview { gap:6px; }
+    .reference-card { width:42px; }
+    .reference-field .reference-slot { width:42px; height:42px; border-radius:10px; }
+    .reference-empty-icon { display:none; }
+    .reference-empty-label { margin:0; font-size:9px; }
+    .clear-reference { width:42px; font-size:7px; }
+    .duration-pill,.model-pill { min-width:0; min-height:42px; padding:0 13px; border-color:var(--strong-line); border-radius:11px; background:#12192a; font-size:11px; letter-spacing:0; text-transform:none; }
+    .duration-pill { width:128px; }
+    .model-pill { width:210px; }
+    .idea-actions .primary { min-width:210px; min-height:46px; border-radius:12px; box-shadow:0 8px 18px rgba(155,255,66,.12); }
+    .primary:hover { background:#afff62; }
+    .ghost { border-color:var(--strong-line); background:#172033; }
+    .scripts-head { margin-bottom:12px; }
+    .scripts-head h2 { font-size:22px; }
+    .placeholder { min-height:210px; border:1px dashed var(--line); border-radius:14px; }
+    .placeholder-icon { width:42px; height:42px; margin-bottom:9px; border-color:var(--strong-line); border-radius:12px; font-size:18px; }
+    .placeholder p { max-width:300px; font-size:13px; }
+    .script-card,.frame,.prompt-card { border-color:var(--line); background:#0a0f1b; }
+    .connection-modal { position:fixed; inset:0; z-index:60; display:grid; place-items:center; padding:24px; background:rgba(3,6,12,.64); backdrop-filter:blur(10px); }
+    .connection-modal[hidden] { display:none; }
+    .connection-modal-dialog { width:min(640px, 100%); padding:22px; border:1px solid var(--strong-line); border-radius:18px; background:#0d1220; box-shadow:0 24px 80px rgba(0,0,0,.5); }
+    .connection-modal-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px; }
+    .connection-modal-head h2 { font-size:24px; }
+    .connection-modal-head p:not(.eyebrow) { max-width:430px; margin:6px 0 0; color:var(--muted); font-size:13px; line-height:1.5; }
+    .connection-modal .api-bar { display:grid; grid-template-columns:120px minmax(0, 1fr); gap:12px; margin:0; padding:0; border:0; background:transparent; }
+    .connection-modal .api-bar-title { display:none; }
+    .connection-modal .api-provider { min-height:42px; }
+    .connection-modal .api-key-input { min-height:42px; }
+    .connection-modal .api-remember,.connection-modal .api-status { grid-column:1 / -1; }
+    .connection-modal .api-error { grid-column:1 / -1; }
+    .help-widget { right:24px; bottom:24px; width:250px; border-color:var(--strong-line); border-radius:14px; background:rgba(13,18,32,.96); }
+    @media (max-width:980px) { .app-layout { grid-template-columns:1fr; gap:18px; } .workflow-sidebar { grid-template-columns:repeat(4,minmax(0,1fr)); position:static; padding:6px; } .workflow-step { grid-template-columns:1fr; justify-items:center; min-height:56px; gap:2px; text-align:center; } .workflow-step span { display:none; } .workflow-step i { display:none; } .hero { grid-template-columns:1fr; gap:12px; } .hero p { max-width:560px; } }
+    @media (max-width:760px) { .app-shell { padding:14px 14px 92px; } .app-header { grid-template-columns:auto 1fr auto; gap:9px; min-height:42px; padding-bottom:14px; } .app-logo { font-size:12px; } .project-meta { display:none; } .header-connection { width:34px; padding:0; justify-content:center; } .header-connection #header-ai-status,.header-model { display:none; } .app-layout { padding-top:18px; } .workflow-sidebar { overflow:hidden; } .workflow-step strong { font-size:11px; } .idea-panel,.scripts-panel,.storyboard,.prompt-stage { padding:16px; } .idea-panel .idea-actions { grid-template-columns:1fr; } .idea-panel .idea-actions-left { display:grid; grid-template-columns:1fr 1fr; } .idea-panel .creative-settings { grid-column:1 / -1; overflow-x:auto; padding-bottom:3px; } .creative-tile { min-width:106px; } .duration-pill,.model-pill { width:100%; } .idea-actions .primary { width:100%; } .connection-modal { align-items:end; padding:10px; } .connection-modal-dialog { padding:18px; border-radius:16px; } .connection-modal .api-bar { grid-template-columns:1fr; } .connection-modal .api-provider { width:100%; } }
   </style>
 </head>
 <body>
-  <main class="app">
+  <div class="app-shell">
+    <header class="app-header" data-ui-enter>
+      <a class="app-logo" href="#idea" aria-label="Viral Script Studio"><span class="app-logo-mark">✦</span><span>Viral Script Studio</span></a>
+      <div class="project-meta"><span class="project-name">Новый ролик</span><span class="save-state" id="save-state">Сохранено</span></div>
+      <div class="header-actions"><button class="header-connection" id="connection-settings" type="button" aria-haspopup="dialog"><span class="connection-dot"></span><span id="header-ai-status">Подключение AI</span><span class="header-model" id="header-model-status">Claude Sonnet 4.6</span></button><button class="header-settings" id="open-settings" type="button" aria-label="Настройки">⚙</button></div>
+    </header>
+    <div class="app-layout">
+      <nav class="workflow-sidebar" aria-label="Этапы проекта" data-ui-enter>
+        <button class="workflow-step is-active" type="button" data-workflow-target="idea"><span>01</span><strong>Идея</strong><i>●</i></button>
+        <button class="workflow-step" type="button" data-workflow-target="scripts-panel"><span>02</span><strong>Сценарий</strong><i>○</i></button>
+        <button class="workflow-step is-locked" type="button" data-workflow-target="storyboard"><span>03</span><strong>Раскадровка</strong><i>○</i></button>
+        <button class="workflow-step is-locked" type="button" data-workflow-target="prompt-stage"><span>04</span><strong>Промты</strong><i>○</i></button>
+      </nav>
+      <main class="app" data-ui-enter>
     <div class="topline"><div class="brand"><span class="brand-mark">✦</span> Viral Script Studio</div><span class="mode">AI workflow / сценарии</span></div>
     <section class="api-bar" aria-label="Подключение AI-модели">
       <span class="api-bar-title">AI connection</span>
@@ -349,7 +452,9 @@
       <div class="prompt-stage-head"><div><p class="eyebrow">Шаг 03</p><h2>Промты для фото</h2><p>Готовые подробные промты для генератора изображений. Отредактируйте их под свой визуальный стиль.</p></div><span class="badge approved">Image prompts</span></div>
       <div class="prompts" id="prompts"></div>
     </section>
-  </main>
+      </main>
+    </div>
+  </div>
   <div class="style-modal" id="style-modal" hidden role="dialog" aria-modal="true" aria-labelledby="style-modal-title">
     <div class="style-modal-dialog">
       <div class="style-modal-head"><div><h2 id="style-modal-title">Выберите визуальный стиль</h2><p>Стиль будет добавлен в промты для всех кадров.</p></div><button class="style-close" id="close-style-modal" type="button" aria-label="Закрыть">×</button></div>
@@ -361,6 +466,12 @@
         <button class="style-option" type="button" data-style="Dreamy 35mm film still, soft grain" data-preview-position="50% 100%"><span>35mm film</span></button>
         <button class="style-option" type="button" data-style="Surreal vibrant editorial art direction" data-preview-position="100% 100%"><span>Surreal</span></button>
       </div>
+    </div>
+  </div>
+  <div class="connection-modal" id="connection-modal" hidden role="dialog" aria-modal="true" aria-labelledby="connection-modal-title">
+    <div class="connection-modal-dialog">
+      <div class="connection-modal-head"><div><p class="eyebrow">НАСТРОЙКИ</p><h2 id="connection-modal-title">Подключения</h2><p>Ключ хранится только на вашем устройстве и используется для генерации.</p></div><button class="style-close" id="close-connection-modal" type="button" aria-label="Закрыть">×</button></div>
+      <div id="connection-modal-content"></div>
     </div>
   </div>
   <aside class="help-widget is-collapsed" id="help-widget" aria-label="Справка по работе с редактором">
@@ -419,6 +530,15 @@
     const apiRemember = document.querySelector('#api-remember');
     const apiStatus = document.querySelector('#api-status');
     const apiError = document.querySelector('#api-error');
+    const connectionModal = document.querySelector('#connection-modal');
+    const connectionModalContent = document.querySelector('#connection-modal-content');
+    const connectionSettings = document.querySelector('#connection-settings');
+    const openSettings = document.querySelector('#open-settings');
+    const closeConnectionModal = document.querySelector('#close-connection-modal');
+    const headerAiStatus = document.querySelector('#header-ai-status');
+    const headerModelStatus = document.querySelector('#header-model-status');
+    const saveState = document.querySelector('#save-state');
+    const apiBar = document.querySelector('.api-bar');
     let count = 0;
     let duration = 30;
     let selectedModel = 'Claude Sonnet 4.6';
@@ -435,6 +555,7 @@
       const hasKey = Boolean(apiKey.value.trim());
       apiStatus.textContent = hasKey ? 'Ключ добавлен · проверка при запуске' : 'Демо-режим';
       apiStatus.classList.toggle('is-ready', hasKey);
+      headerAiStatus.textContent = hasKey ? 'OpenRouter готов' : 'Подключение AI';
     }
     function showApiError(message) {
       apiError.textContent = message;
@@ -745,6 +866,7 @@
     function setModel(model) {
       selectedModel = model;
       modelButtonValue.textContent = model;
+      headerModelStatus.textContent = model;
       modelPopover.querySelectorAll('.model-choice').forEach((choice) => choice.classList.toggle('is-selected', choice.dataset.model === model));
     }
     apiKey.addEventListener('input', saveApiSettings);
@@ -863,6 +985,7 @@
         const frameItems = await generateStoryboard(script);
         document.querySelectorAll('.script-card .badge').forEach((badge) => { badge.textContent = 'Одобрено'; badge.classList.add('approved'); });
         renderStoryboard(frameItems);
+        updateWorkflowSidebar();
         clearApiError();
         saveDraft();
       } catch (error) {
@@ -946,6 +1069,7 @@
     const referenceDbName = 'viral-script-studio-references-v1';
     function inputValues(selector) { return [...document.querySelectorAll(selector)].map((field) => field.value); }
     function saveDraft() {
+      saveState.textContent = 'Сохранено';
       const state = {
         idea: idea.innerText,
         visualStyle: visualStyle.value,
@@ -1043,6 +1167,52 @@
     restoreApiSettings();
     restoreDraft();
     restoreReferenceFiles();
+    connectionModalContent.append(apiBar);
+    function openConnectionModal() {
+      connectionModal.hidden = false;
+      if (window.gsap && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) gsap.fromTo(connectionModal.querySelector('.connection-modal-dialog'), { opacity: 0, scale: .98, y: 8 }, { opacity: 1, scale: 1, y: 0, duration: .22, ease: 'power2.out' });
+    }
+    function closeConnection() {
+      if (window.gsap && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) gsap.to(connectionModal.querySelector('.connection-modal-dialog'), { opacity: 0, scale: .98, y: 8, duration: .16, ease: 'power2.in', onComplete: () => { connectionModal.hidden = true; } });
+      else connectionModal.hidden = true;
+    }
+    connectionSettings.addEventListener('click', openConnectionModal);
+    openSettings.addEventListener('click', openConnectionModal);
+    closeConnectionModal.addEventListener('click', closeConnection);
+    connectionModal.addEventListener('click', (event) => { if (event.target === connectionModal) closeConnection(); });
+    const ideaCounter = document.createElement('span');
+    ideaCounter.className = 'idea-char-count';
+    ideaCounter.setAttribute('aria-live', 'polite');
+    idea.closest('.idea-copy').append(ideaCounter);
+    function updateIdeaCounter() { ideaCounter.textContent = `${idea.innerText.trim().length} / 1200`; }
+    idea.addEventListener('input', updateIdeaCounter);
+    updateIdeaCounter();
+    function updateWorkflowSidebar() {
+      const steps = [...document.querySelectorAll('.workflow-step')];
+      const scenarioReady = count > 0;
+      const storyboardReady = !storyboard.hidden;
+      const promptsReady = !promptStage.hidden;
+      steps.forEach((step) => step.classList.remove('is-active', 'is-complete', 'is-locked'));
+      if (!scenarioReady) { steps[0].classList.add('is-active'); steps.slice(1).forEach((step) => step.classList.add('is-locked')); return; }
+      steps[0].classList.add('is-complete');
+      if (!storyboardReady) { steps[1].classList.add('is-active'); steps.slice(2).forEach((step) => step.classList.add('is-locked')); return; }
+      steps[1].classList.add('is-complete');
+      if (!promptsReady) { steps[2].classList.add('is-active'); steps[3].classList.add('is-locked'); return; }
+      steps[2].classList.add('is-complete'); steps[3].classList.add('is-active');
+    }
+    const originalRefresh = refresh;
+    refresh = function () { originalRefresh(); updateWorkflowSidebar(); };
+    updateWorkflowSidebar();
+    document.querySelectorAll('[data-workflow-target]').forEach((step) => step.addEventListener('click', () => document.getElementById(step.dataset.workflowTarget)?.scrollIntoView({ behavior: 'smooth', block: 'start' })));
+    const scenarioObserver = new MutationObserver(() => {
+      if (window.gsap && !window.matchMedia('(prefers-reduced-motion: reduce)').matches && cards.children.length) gsap.fromTo(cards.children, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: .32, stagger: .06, overwrite: 'auto' });
+      updateWorkflowSidebar();
+    });
+    scenarioObserver.observe(cards, { childList: true });
+    approveFrames.addEventListener('click', () => { setTimeout(updateWorkflowSidebar, 0); });
+    if (window.gsap && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      gsap.fromTo('[data-ui-enter]', { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: .42, stagger: .08, ease: 'power2.out', clearProps: 'transform' });
+    }
     helpToggle.addEventListener('click', () => {
       const collapsed = helpWidget.classList.toggle('is-collapsed');
       helpToggle.setAttribute('aria-expanded', String(!collapsed));

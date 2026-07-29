@@ -375,7 +375,9 @@
     .creative-tile.is-style-selected .creative-tile-label { background:rgba(6,10,18,.72); }
     .reference-field .reference-preview { gap:8px; }
     .reference-card { width:52px; }
-    .reference-field .reference-slot { width:52px; height:52px; border-radius:12px; }
+    .reference-field .reference-slot { width:52px; height:52px; border-radius:12px; overflow:hidden; isolation:isolate; }
+    .reference-field .reference-slot.is-filled .reference-add-overlay { inset:0; border-radius:inherit; overflow:hidden; }
+    .reference-field .reference-slot.is-filled .reference-add-overlay span { width:28px; height:28px; border-radius:9px; font-size:22px; line-height:28px; }
     .reference-field .reference-slot.is-empty { display:flex; align-items:center; justify-content:center; width:128px; padding:0 14px; }
     .reference-slot.is-empty > span { display:flex; align-items:center; gap:8px; }
     .reference-empty-icon { display:block; font-size:18px; }

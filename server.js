@@ -5,12 +5,15 @@ const path = require('node:path');
 const root = __dirname;
 const envPath = path.join(root, '.env.local');
 
-if (fs.existsSync(envPath)) {
-  for (const line of fs.readFileSync(envPath, 'utf8').split(/\r?\n/)) {
-    const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
-    if (match && !match[1].startsWith('#')) process.env[match[1]] = match[2].replace(/^['"]|['"]$/g, '');
+function loadLocalEnv() {
+  if (fs.existsSync(envPath)) {
+    for (const line of fs.readFileSync(envPath, 'utf8').split(/\r?\n/)) {
+      const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
+      if (match && !match[1].startsWith('#')) process.env[match[1]] = match[2].replace(/^['"]|['"]$/g, '');
+    }
   }
 }
+loadLocalEnv();
 
 const mimeTypes = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
@@ -30,6 +33,7 @@ async function readJson(request) {
 }
 
 async function generateScenario(request, response) {
+  loadLocalEnv();
   const body = await readJson(request);
   const apiKey = process.env.OPENROUTER_API_KEY || body.apiKey;
   if (!apiKey) return sendJson(response, 503, { error: 'Добавьте OPENROUTER_API_KEY в .env.local или вставьте ключ в интерфейс.' });

@@ -411,6 +411,14 @@
     .help-widget { right:24px; bottom:24px; width:250px; border-color:var(--strong-line); border-radius:14px; background:rgba(13,18,32,.96); }
     @media (max-width:980px) { .app-layout { grid-template-columns:1fr; gap:18px; } .workflow-sidebar { grid-template-columns:repeat(4,minmax(0,1fr)); position:static; padding:6px; } .workflow-step { grid-template-columns:1fr; justify-items:center; min-height:56px; gap:2px; text-align:center; } .workflow-step span { display:none; } .workflow-step i { display:none; } .hero { grid-template-columns:1fr; gap:12px; } .hero p { max-width:560px; } }
     @media (max-width:760px) { .app-shell { padding:14px 14px 92px; } .app-header { grid-template-columns:auto 1fr auto; gap:9px; min-height:42px; padding-bottom:14px; } .app-logo { font-size:12px; } .project-meta { display:none; } .header-connection { width:34px; padding:0; justify-content:center; } .header-connection #header-ai-status,.header-model { display:none; } .app-layout { padding-top:18px; } .workflow-sidebar { overflow:hidden; } .workflow-step strong { font-size:11px; } .idea-panel,.scripts-panel,.storyboard,.prompt-stage { padding:16px; } .idea-panel .idea-actions { grid-template-columns:1fr; } .idea-panel .idea-actions-left { display:grid; grid-template-columns:1fr 1fr; } .idea-panel .creative-settings { grid-column:1 / -1; overflow-x:auto; padding-bottom:3px; } .creative-tile { min-width:106px; } .reference-field .reference-slot.is-empty { width:106px; } .duration-pill,.model-pill { width:100%; } .idea-actions .primary { width:100%; } .connection-modal { align-items:end; padding:10px; } .connection-modal-dialog { padding:18px; border-radius:16px; } .connection-modal .api-bar { grid-template-columns:1fr; } .connection-modal .api-provider { width:100%; } }
+    /* Browser zoom reduces the CSS viewport before it reaches the phone layout.
+       Keep the tools on one rail and move only the primary action below them. */
+    @media (min-width:761px) and (max-width:1100px) {
+      .idea-panel .idea-actions { grid-template-columns:1fr; }
+      .idea-panel .idea-actions-left { flex-wrap:nowrap; }
+      .idea-panel .creative-settings { flex:0 0 auto; }
+      .idea-actions .primary { justify-self:end; }
+    }
   </style>
 </head>
 <body>

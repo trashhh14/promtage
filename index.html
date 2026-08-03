@@ -601,12 +601,12 @@
     let activeProjectId = '';
     const apiSettingsKey = 'viral-script-studio-openrouter-v1';
     const modelIds = {
-      'Claude Sonnet 4.6': 'anthropic/claude-sonnet-4.5',
-      'Claude Opus 4.7': 'anthropic/claude-opus-4.5',
-      'GPT-5.6 Sol': 'openai/gpt-5.2',
-      'GPT-5.6 Terra': 'openai/gpt-5-mini',
-      'Gemini 3.1 Pro Preview': 'google/gemini-3-pro-preview',
-      'Gemini 3.5 Flash': 'google/gemini-3-flash-preview'
+      'Claude Sonnet 4.6': 'anthropic/claude-sonnet-4',
+      'Claude Opus 4.7': 'anthropic/claude-opus-5',
+      'GPT-5.6 Sol': 'openai/gpt-5.4',
+      'GPT-5.6 Terra': 'openai/gpt-5.2',
+      'Gemini 3.1 Pro Preview': 'google/gemini-3.6-flash',
+      'Gemini 3.5 Flash': 'google/gemini-3.5-flash-lite'
     };
     function updateApiStatus() {
       const hasKey = Boolean(apiKey.value.trim());
@@ -970,7 +970,10 @@
         const response = await fetch('/api/workflow/scenario', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: modelIds[selectedModel] || 'openrouter/auto', apiKey: apiKey.value.trim() || undefined, ...connectionRequest }) }).catch(() => null);
         const payload = response ? await response.json().catch(() => ({})) : {};
         if ((!response || response.status === 404) && apiKey.value.trim()) await requestOpenRouterDirect(connectionRequest);
-        else if (!response?.ok || !payload.output) throw new Error(payload.error || 'Проверка не прошла.');
+        else if (!response?.ok || !payload.output) {
+          const message = typeof payload.error === 'string' ? payload.error : payload.error?.message || payload.message || `Проверка не прошла (HTTP ${response?.status || 'нет ответа'}).`;
+          throw new Error(message);
+        }
         apiStatus.textContent = 'Ключ и модель работают'; apiStatus.classList.add('is-ready'); clearApiError();
       } catch (error) { showApiError(error.message || 'Не удалось проверить ключ.'); }
       finally { testConnectionButton.disabled = false; testConnectionButton.textContent = prior; }

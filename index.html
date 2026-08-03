@@ -355,7 +355,7 @@
     .hero p { max-width:360px; color:var(--muted); font-size:14px; line-height:1.55; }
     .panel { border-color:var(--line); border-radius:18px; background:var(--panel); box-shadow:0 14px 36px rgba(0,0,0,.14); }
     .idea-panel,.scripts-panel,.storyboard,.prompt-stage { padding:28px; }
-    .idea-panel { background:var(--panel); border-color:var(--strong-line); }
+    .idea-panel { overflow:visible; background:var(--panel); border-color:var(--strong-line); }
     .idea-panel::after { display:none; }
     .stage-heading { align-items:flex-start; margin-bottom:22px; }
     .stage-heading h2 { font-size:25px; letter-spacing:-.04em; }
@@ -920,7 +920,12 @@
     }
     async function addScenario() {
       const topic = idea.innerText.trim();
-      if (!topic) { idea.focus(); return; }
+      if (!topic) {
+        idea.focus();
+        showApiError('Сначала опишите идею для ролика — хотя бы одной фразой.');
+        idea.closest('.idea-editable').animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-5px)' }, { transform: 'translateX(5px)' }, { transform: 'translateX(0)' }], { duration: 220 });
+        return;
+      }
       generate.disabled = true;
       generate.textContent = 'Собираем сценарий…';
       count += 1;

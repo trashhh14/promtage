@@ -4,6 +4,7 @@ const path = require('node:path');
 
 const root = __dirname;
 const envPath = path.join(root, '.env.local');
+const requestBuckets = new Map();
 
 function loadLocalEnv() {
   if (fs.existsSync(envPath)) {
@@ -28,14 +29,28 @@ function sendJson(response, status, body) {
 
 async function readJson(request) {
   let body = '';
-  for await (const chunk of request) body += chunk;
+  for await (const chunk of request) {
+    body += chunk;
+    if (body.length > 200_000) throw new Error('Request body is too large');
+  }
   return JSON.parse(body || '{}');
+}
+
+function isRateLimited(request) {
+  const key = request.socket.remoteAddress || 'local';
+  const now = Date.now();
+  const bucket = (requestBuckets.get(key) || []).filter((time) => now - time < 60_000);
+  bucket.push(now);
+  requestBuckets.set(key, bucket);
+  return bucket.length > 20;
 }
 
 async function generateScenario(request, response) {
   loadLocalEnv();
+  if (isRateLimited(request)) return sendJson(response, 429, { error: 'Слишком много запросов. Подождите минуту и попробуйте снова.' });
   const body = await readJson(request);
-  const apiKey = process.env.OPENROUTER_API_KEY || body.apiKey;
+  const acceptsBrowserKey = process.env.ALLOW_CLIENT_API_KEYS === 'true' || process.env.NODE_ENV !== 'production';
+  const apiKey = process.env.OPENROUTER_API_KEY || (acceptsBrowserKey ? body.apiKey : '');
   if (!apiKey) return sendJson(response, 503, { error: 'Добавьте OPENROUTER_API_KEY в .env.local или вставьте ключ в интерфейс.' });
   if (!body.system || !body.user) return sendJson(response, 400, { error: 'Не хватает данных сценарного движка.' });
 
@@ -72,6 +87,10 @@ async function generateScenario(request, response) {
 http.createServer(async (request, response) => {
   try {
     const url = new URL(request.url, 'http://127.0.0.1');
+    if (request.method === 'GET' && url.pathname === '/api/health') {
+      loadLocalEnv();
+      return sendJson(response, 200, { ok: true, serverKeyConfigured: Boolean(process.env.OPENROUTER_API_KEY), acceptsBrowserKey: process.env.ALLOW_CLIENT_API_KEYS === 'true' || process.env.NODE_ENV !== 'production' });
+    }
     if (request.method === 'POST' && ['/api/workflow/scenario', '/api/workflow/storyboard'].includes(url.pathname)) return generateScenario(request, response);
     if (request.method !== 'GET' && request.method !== 'HEAD') return sendJson(response, 405, { error: 'Method not allowed' });
 

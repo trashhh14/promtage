@@ -419,13 +419,38 @@
       .idea-panel .creative-settings { flex:0 0 auto; }
       .idea-actions .primary { justify-self:end; }
     }
+    .project-switcher { display:flex; align-items:center; gap:7px; min-width:0; }
+    .project-select,.project-action,.frame-action,.quality-action,.export-button { min-height:34px; border:1px solid var(--strong-line); border-radius:9px; background:#12192a; color:var(--text); cursor:pointer; font-size:12px; font-weight:700; }
+    .project-select { max-width:180px; padding:0 28px 0 10px; }
+    .project-action,.frame-action,.quality-action,.export-button { padding:0 10px; }
+    .project-action:hover,.frame-action:hover,.quality-action:hover,.export-button:hover { border-color:var(--accent); color:var(--accent); }
+    .project-modal { position:fixed; inset:0; z-index:70; display:grid; place-items:center; padding:20px; background:rgba(3,6,12,.68); backdrop-filter:blur(10px); }
+    .project-modal[hidden] { display:none; }
+    .project-modal-dialog { width:min(460px,100%); padding:22px; border:1px solid var(--strong-line); border-radius:18px; background:#0d1220; box-shadow:0 24px 80px rgba(0,0,0,.52); }
+    .project-modal-dialog h2 { font-size:22px; }
+    .project-modal-dialog p { color:var(--muted); font-size:13px; line-height:1.5; }
+    .project-modal-form { display:grid; gap:10px; margin-top:16px; }
+    .project-modal-form input { min-height:44px; padding:0 12px; border:1px solid var(--strong-line); border-radius:10px; background:#080d18; color:var(--text); outline:0; }
+    .project-modal-actions,.stage-tools,.frame-actions,.quality-tools { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+    .project-modal-actions { justify-content:flex-end; margin-top:16px; }
+    .stage-tools { justify-content:flex-end; }
+    .frame { position:relative; }
+    .frame-timeline { display:flex; align-items:center; gap:8px; margin:10px 0 8px; color:var(--muted); font-size:12px; }
+    .frame-timeline input { width:58px; min-height:32px; padding:0 8px; border:1px solid var(--strong-line); border-radius:8px; background:#111827; color:var(--text); }
+    .frame-voiceover { width:100%; min-height:58px; margin-top:9px; padding:9px 10px; border:1px solid var(--line); border-radius:10px; background:#0b101b; color:var(--text); font:inherit; font-size:13px; line-height:1.45; resize:vertical; }
+    .frame-voiceover::placeholder { color:var(--subtle); }
+    .frame-actions { margin-top:10px; justify-content:space-between; }
+    .quality-tools { margin-top:10px; }
+    .quality-action { min-height:30px; padding:0 9px; font-size:11px; }
+    .project-summary { margin:0; color:var(--subtle); font-size:12px; }
+    @media (max-width:760px) { .project-switcher { display:none; } .stage-tools { width:100%; justify-content:stretch; } .stage-tools .export-button { flex:1; } .frame-actions { align-items:flex-start; flex-direction:column; } .frame-timeline { flex-wrap:wrap; } }
   </style>
 </head>
 <body>
   <div class="app-shell">
     <header class="app-header" data-ui-enter>
       <a class="app-logo" href="#idea" aria-label="Viral Script Studio"><span class="app-logo-mark">✦</span><span>Viral Script Studio</span></a>
-      <div class="project-meta"><span class="project-name">Новый ролик</span><span class="save-state" id="save-state">Сохранено</span></div>
+      <div class="project-meta"><div class="project-switcher"><select class="project-select" id="project-select" aria-label="Текущий проект"></select><button class="project-action" id="new-project" type="button">＋</button><button class="project-action" id="duplicate-project" type="button" title="Дублировать проект">⧉</button></div><span class="save-state" id="save-state">Сохранено</span></div>
       <div class="header-actions"><button class="header-connection" id="connection-settings" type="button" aria-haspopup="dialog"><span class="connection-dot"></span><span id="header-ai-status">Подключение AI</span><span class="header-model" id="header-model-status">Claude Sonnet 4.6</span></button><button class="header-settings" id="open-settings" type="button" aria-label="Настройки">⚙</button></div>
     </header>
     <div class="app-layout">
@@ -442,7 +467,7 @@
       <select class="api-provider" id="api-provider" aria-label="Провайдер модели"><option value="openrouter">OpenRouter</option></select>
       <div class="api-key-wrap"><input class="api-key-input" id="api-key" type="password" autocomplete="off" spellcheck="false" placeholder="Вставьте OpenRouter API key"><button class="api-key-toggle" id="api-key-toggle" type="button" aria-label="Показать API-ключ">◉</button></div>
       <label class="api-remember"><input id="api-remember" type="checkbox"> Запомнить на этом устройстве</label>
-      <span class="api-status" id="api-status">Демо-режим</span>
+      <span class="api-status" id="api-status">Демо-режим</span><button class="project-action" id="test-connection" type="button">Проверить ключ</button>
       <p class="api-error" id="api-error" hidden role="alert"></p>
     </section>
     <section class="hero"><h1>Идея → вирусный сценарий.</h1><p>Одна идея превращается в один готовый сценарий с сильным хуком. Редактируй текст, подтверждай результат — и переходи дальше.</p></section>
@@ -458,11 +483,11 @@
       </section>
     </section>
     <section class="panel storyboard" id="storyboard" hidden aria-label="Раскадровка">
-      <div class="storyboard-head"><div><p class="eyebrow">Шаг 02</p><h2>Раскадровка</h2><p>LLM разложил сценарий на короткие визуальные идеи. Каждый кадр можно отредактировать перед созданием визуала.</p></div><button class="button ghost" id="approve-frames" type="button" aria-label="Approve all storyboard frames">Approve all</button></div>
+      <div class="storyboard-head"><div><p class="eyebrow">Шаг 02</p><h2>Раскадровка</h2><p>LLM разложил сценарий на короткие визуальные идеи. Каждый кадр можно отредактировать перед созданием визуала.</p><p class="project-summary" id="timeline-summary"></p></div><div class="stage-tools"><button class="export-button" id="export-storyboard" type="button">Скачать раскадровку</button><button class="button ghost" id="approve-frames" type="button" aria-label="Approve all storyboard frames">Approve all</button></div></div>
       <div class="frames" id="frames"></div>
     </section>
     <section class="panel prompt-stage" id="prompt-stage" hidden aria-label="Промты для фото">
-      <div class="prompt-stage-head"><div><p class="eyebrow">Шаг 03</p><h2>Промты для фото</h2><p>Готовые подробные промты для генератора изображений. Отредактируйте их под свой визуальный стиль.</p></div><span class="badge approved">Image prompts</span></div>
+      <div class="prompt-stage-head"><div><p class="eyebrow">Шаг 03</p><h2>Промты для фото</h2><p>Готовые подробные промты для генератора изображений. Отредактируйте их под свой визуальный стиль.</p></div><div class="stage-tools"><button class="export-button" id="export-prompts" type="button">Скачать промты</button><button class="export-button" id="export-project" type="button">Экспорт проекта</button><button class="export-button" id="import-project" type="button">Импорт</button><input id="import-project-file" type="file" accept="application/json,.json" hidden><span class="badge approved">Image prompts</span></div></div>
       <div class="prompts" id="prompts"></div>
     </section>
       </main>
@@ -486,6 +511,9 @@
       <div class="connection-modal-head"><div><p class="eyebrow">НАСТРОЙКИ</p><h2 id="connection-modal-title">Подключения</h2><p>Ключ хранится только на вашем устройстве и используется для генерации.</p></div><button class="style-close" id="close-connection-modal" type="button" aria-label="Закрыть">×</button></div>
       <div id="connection-modal-content"></div>
     </div>
+  </div>
+  <div class="project-modal" id="project-modal" hidden role="dialog" aria-modal="true" aria-labelledby="project-modal-title">
+    <div class="project-modal-dialog"><h2 id="project-modal-title">Новый проект</h2><p>Проекты сохраняются на этом устройстве. Экспортируйте файл, чтобы передать проект другому человеку или перенести в другой браузер.</p><form class="project-modal-form" id="project-form"><input id="project-name-input" maxlength="70" required placeholder="Например: Коллекционер взглядов"><div class="project-modal-actions"><button class="project-action" id="cancel-project" type="button">Отмена</button><button class="button primary" type="submit">Создать проект</button></div></form></div>
   </div>
   <aside class="help-widget is-collapsed" id="help-widget" aria-label="Справка по работе с редактором">
     <div class="help-bar" id="help-drag-handle">
@@ -543,6 +571,7 @@
     const apiRemember = document.querySelector('#api-remember');
     const apiStatus = document.querySelector('#api-status');
     const apiError = document.querySelector('#api-error');
+    const testConnectionButton = document.querySelector('#test-connection');
     const connectionModal = document.querySelector('#connection-modal');
     const connectionModalContent = document.querySelector('#connection-modal-content');
     const connectionSettings = document.querySelector('#connection-settings');
@@ -552,9 +581,24 @@
     const headerModelStatus = document.querySelector('#header-model-status');
     const saveState = document.querySelector('#save-state');
     const apiBar = document.querySelector('.api-bar');
+    const projectSelect = document.querySelector('#project-select');
+    const newProjectButton = document.querySelector('#new-project');
+    const duplicateProjectButton = document.querySelector('#duplicate-project');
+    const projectModal = document.querySelector('#project-modal');
+    const projectForm = document.querySelector('#project-form');
+    const projectNameInput = document.querySelector('#project-name-input');
+    const cancelProjectButton = document.querySelector('#cancel-project');
+    const timelineSummary = document.querySelector('#timeline-summary');
+    const exportStoryboardButton = document.querySelector('#export-storyboard');
+    const exportPromptsButton = document.querySelector('#export-prompts');
+    const exportProjectButton = document.querySelector('#export-project');
+    const importProjectButton = document.querySelector('#import-project');
+    const importProjectFile = document.querySelector('#import-project-file');
     let count = 0;
     let duration = 30;
     let selectedModel = 'Claude Sonnet 4.6';
+    const projectRegistryKey = 'viral-script-studio-projects-v1';
+    let activeProjectId = '';
     const apiSettingsKey = 'viral-script-studio-openrouter-v1';
     const modelIds = {
       'Claude Sonnet 4.6': 'anthropic/claude-sonnet-4.5',
@@ -664,6 +708,34 @@
       if (typeof window.scriptEngineGenerate === 'function') return window.scriptEngineGenerate(request);
       return buildScriptPreview(request);
     }
+    async function rewriteWithAi(text, instruction) {
+      const request = {
+        system: 'You are a senior short-form video editor. Rewrite only the supplied Russian text according to the instruction. Keep its facts, characters, continuity and visual style. Return only the revised text, without commentary or markdown.',
+        user: `Instruction: ${instruction}\n\nText:\n${text}`
+      };
+      const localResponse = await fetch('/api/workflow/scenario', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: modelIds[selectedModel] || 'openrouter/auto', system: request.system, user: request.user, apiKey: apiKey.value.trim() || undefined })
+      }).catch(() => null);
+      if (localResponse && localResponse.ok) {
+        const payload = await localResponse.json().catch(() => ({}));
+        if (payload.output) return payload.output.trim();
+      }
+      if (apiKey.value.trim()) return (await requestOpenRouterDirect(request)).trim();
+      throw new Error('Для AI-правки добавьте ключ в настройках подключения.');
+    }
+    cards.addEventListener('click', async (event) => {
+      const button = event.target.closest('[data-rewrite]');
+      if (!button) return;
+      const textarea = button.closest('.script-card')?.querySelector('.script-text');
+      if (!textarea?.value.trim()) return;
+      const instructions = { shorter: 'Make it 30% shorter and preserve the hook, escalation and ending.', dynamic: 'Increase visual dynamics and escalation. Remove static filler.', natural: 'Remove generic AI phrasing and clichés. Make the language precise, natural and visual.' };
+      const previous = button.textContent;
+      button.disabled = true; button.textContent = 'Правим…';
+      try { textarea.value = await rewriteWithAi(textarea.value.trim(), instructions[button.dataset.rewrite]); saveDraft(); clearApiError(); }
+      catch (error) { showApiError(error.message || 'Не удалось отредактировать текст.'); }
+      finally { button.disabled = false; button.textContent = previous; }
+    });
     function refresh() { counter.textContent = count; empty.hidden = count > 0; approve.disabled = count === 0; storyboard.hidden = true; promptStage.hidden = true; }
     function buildFrames(script) {
       if (/аргентин|месси/i.test(script)) return [
@@ -702,7 +774,7 @@
     }
     function renderPrompts() {
       prompts.innerHTML = '';
-      [...frames.querySelectorAll('textarea')].forEach((frame, index) => {
+      [...frames.querySelectorAll('.frame-visual')].forEach((frame, index) => {
         const card = document.createElement('article');
         card.className = 'prompt-card';
         card.innerHTML = `<span class="prompt-label">Промт ${String(index + 1).padStart(2, '0')}</span><div class="prompt-workspace"><div class="prompt-links"><span class="prompt-links-label">Ссылки</span><button class="prompt-link style-link" type="button" data-insert-style="true">Стиль</button><button class="prompt-link add-link" type="button" data-add-reference="true" aria-label="Добавить референс">＋</button></div><div class="prompt-editor"><div class="prompt-editable" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Промт для фото ${index + 1}"></div></div></div>`;
@@ -855,7 +927,7 @@
       count += 1;
       const card = document.createElement('article');
       card.className = 'script-card';
-      card.innerHTML = `<div class="script-card-top"><h3>Сценарий ${count}</h3><span class="badge">Черновик</span></div><label class="description" for="script-${count}">Текст сценария — редактируется</label><textarea class="script-text" id="script-${count}"></textarea>`;
+      card.innerHTML = `<div class="script-card-top"><h3>Сценарий ${count}</h3><span class="badge">Черновик</span></div><label class="description" for="script-${count}">Текст сценария — редактируется</label><textarea class="script-text" id="script-${count}"></textarea><div class="quality-tools" aria-label="Быстрые правки сценария"><button class="quality-action" type="button" data-rewrite="shorter">Короче</button><button class="quality-action" type="button" data-rewrite="dynamic">Больше динамики</button><button class="quality-action" type="button" data-rewrite="natural">Убрать AI-штампы</button></div>`;
       try {
         card.querySelector('textarea').value = await generateWithScriptEngine(topic);
         clearApiError();
@@ -885,6 +957,17 @@
     apiKey.addEventListener('input', saveApiSettings);
     apiRemember.addEventListener('change', saveApiSettings);
     apiProvider.addEventListener('change', saveApiSettings);
+    testConnectionButton.addEventListener('click', async () => {
+      const prior = testConnectionButton.textContent;
+      testConnectionButton.disabled = true; testConnectionButton.textContent = 'Проверяем…';
+      try {
+        const response = await fetch('/api/workflow/scenario', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: modelIds[selectedModel] || 'openrouter/auto', apiKey: apiKey.value.trim() || undefined, system: 'Reply with exactly OK.', user: 'Connection test.' }) });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || !payload.output) throw new Error(payload.error || 'Проверка не прошла.');
+        apiStatus.textContent = 'Ключ и модель работают'; apiStatus.classList.add('is-ready'); clearApiError();
+      } catch (error) { showApiError(error.message || 'Не удалось проверить ключ.'); }
+      finally { testConnectionButton.disabled = false; testConnectionButton.textContent = prior; }
+    });
     apiKeyToggle.addEventListener('click', () => {
       const isPassword = apiKey.type === 'password';
       apiKey.type = isPassword ? 'text' : 'password';
@@ -980,13 +1063,52 @@
         const frame = document.createElement('article');
         frame.className = 'frame';
         frame.dataset.duration = String(frameItem.duration);
-        frame.innerHTML = `<div class="frame-top"><span class="frame-number">Кадр ${String(index + 1).padStart(2, '0')}</span><span class="frame-duration">${frameItem.duration} сек</span></div><textarea aria-label="Идея для кадра ${index + 1}"></textarea>`;
-        frame.querySelector('textarea').value = frameItem.visual;
+        frame.innerHTML = `<div class="frame-top"><span class="frame-number">Кадр ${String(index + 1).padStart(2, '0')}</span><span class="frame-duration">${frameItem.duration} сек</span></div><div class="frame-timeline"><span>На таймлайне</span><strong class="frame-range"></strong><label>Длительность <input class="frame-duration-input" type="number" min="1" max="60" value="${frameItem.duration}" aria-label="Длительность кадра ${index + 1}"> сек</label></div><textarea class="frame-visual" aria-label="Идея для кадра ${index + 1}"></textarea><textarea class="frame-voiceover" aria-label="Текст диктора для кадра ${index + 1}" placeholder="Текст диктора для этого кадра (необязательно)"></textarea><div class="frame-actions"><div class="quality-tools"><button class="quality-action" type="button" data-frame-rewrite="dynamic">Больше динамики</button><button class="quality-action" type="button" data-frame-rewrite="consistent">Сохранить персонажа</button></div><div class="quality-tools"><button class="frame-action" type="button" data-frame-action="up">↑</button><button class="frame-action" type="button" data-frame-action="down">↓</button><button class="frame-action" type="button" data-frame-action="duplicate">Дубль</button><button class="frame-action" type="button" data-frame-action="delete">Удалить</button></div></div>`;
+        frame.querySelector('.frame-visual').value = frameItem.visual;
+        frame.querySelector('.frame-voiceover').value = frameItem.voiceover || '';
         frames.append(frame);
       });
+      refreshTimeline();
       storyboard.hidden = false;
       storyboard.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+    function refreshTimeline() {
+      let cursor = 0;
+      [...frames.querySelectorAll('.frame')].forEach((frame, index) => {
+        const frameDuration = Math.max(1, Number(frame.querySelector('.frame-duration-input')?.value || frame.dataset.duration || 1));
+        frame.dataset.duration = String(frameDuration);
+        frame.querySelector('.frame-number').textContent = `Кадр ${String(index + 1).padStart(2, '0')}`;
+        frame.querySelector('.frame-duration').textContent = `${frameDuration} сек`;
+        frame.querySelector('.frame-range').textContent = `${cursor.toFixed(0)}–${(cursor + frameDuration).toFixed(0)} сек`;
+        cursor += frameDuration;
+      });
+      timelineSummary.textContent = cursor ? `Таймлайн: ${cursor} сек · ${frames.children.length} кадров` : '';
+    }
+    frames.addEventListener('input', (event) => {
+      if (event.target.matches('.frame-duration-input')) refreshTimeline();
+      saveDraft();
+    });
+    frames.addEventListener('click', async (event) => {
+      const frame = event.target.closest('.frame');
+      if (!frame) return;
+      const action = event.target.closest('[data-frame-action]')?.dataset.frameAction;
+      if (action === 'up' && frame.previousElementSibling) frame.previousElementSibling.before(frame);
+      if (action === 'down' && frame.nextElementSibling) frame.nextElementSibling.after(frame);
+      if (action === 'duplicate') { const copy = frame.cloneNode(true); frame.after(copy); }
+      if (action === 'delete' && frames.children.length > 1) frame.remove();
+      if (action) { refreshTimeline(); saveDraft(); return; }
+      const rewrite = event.target.closest('[data-frame-rewrite]');
+      if (!rewrite) return;
+      const visual = frame.querySelector('.frame-visual');
+      const prior = rewrite.textContent;
+      rewrite.disabled = true; rewrite.textContent = 'Правим…';
+      try {
+        const instruction = rewrite.dataset.frameRewrite === 'consistent' ? 'Keep the same character identity, wardrobe and key visual traits as the earlier frames.' : 'Increase visual action, contrast and a clear cinematic beat. Keep the same story.';
+        visual.value = await rewriteWithAi(visual.value, instruction);
+        saveDraft(); clearApiError();
+      } catch (error) { showApiError(error.message || 'Не удалось отредактировать кадр.'); }
+      finally { rewrite.disabled = false; rewrite.textContent = prior; }
+    });
     approve.addEventListener('click', async (event) => {
       event.preventDefault();
       event.stopImmediatePropagation();
@@ -1078,8 +1200,8 @@
     });
     renderReferenceSlots();
     attachRichReferenceAutocomplete(idea);
-    const draftKey = 'viral-script-studio-draft-v1';
-    const referenceDbName = 'viral-script-studio-references-v1';
+    let draftKey = 'viral-script-studio-draft-v1';
+    let referenceDbName = 'viral-script-studio-references-v1';
     function inputValues(selector) { return [...document.querySelectorAll(selector)].map((field) => field.value); }
     function saveDraft() {
       saveState.textContent = 'Сохранено';
@@ -1100,6 +1222,11 @@
         framesApproved: approveFrames.disabled
       };
       try { localStorage.setItem(draftKey, JSON.stringify(state)); } catch (_) { }
+      if (activeProjectId) {
+        const projects = getProjects();
+        const current = projects.find((project) => project.id === activeProjectId);
+        if (current) { current.updatedAt = new Date().toISOString(); saveProjects(projects); }
+      }
     }
     function restoreValues(selector, values) {
       document.querySelectorAll(selector).forEach((field, index) => { if (values[index] != null) field.value = values[index]; });
@@ -1139,6 +1266,7 @@
       approve.disabled = Boolean(state.scriptApproved);
       approveFrames.disabled = Boolean(state.framesApproved);
       if (state.framesApproved) approveFrames.textContent = 'Одобрено';
+      refreshTimeline();
     }
     function openReferenceDb() {
       return new Promise((resolve, reject) => {
@@ -1177,7 +1305,127 @@
     document.addEventListener('input', (event) => {
       if (event.target.matches('#idea, #visual-style, .script-text, #frames textarea, .prompt-editable')) saveDraft();
     });
+    function getProjects() {
+      try { return JSON.parse(localStorage.getItem(projectRegistryKey)) || []; } catch (_) { return []; }
+    }
+    function saveProjects(projects) { localStorage.setItem(projectRegistryKey, JSON.stringify(projects)); }
+    function renderProjectSwitcher() {
+      const projects = getProjects();
+      projectSelect.innerHTML = projects.map((project) => `<option value="${project.id}">${project.name}</option>`).join('');
+      projectSelect.value = activeProjectId;
+    }
+    function setProjectStorage(projectId) {
+      activeProjectId = projectId;
+      draftKey = `viral-script-studio-draft-v2-${projectId}`;
+      referenceDbName = `viral-script-studio-references-v2-${projectId}`;
+      localStorage.setItem('viral-script-studio-active-project-v1', projectId);
+    }
+    function initializeProjects() {
+      let projects = getProjects();
+      if (!projects.length) {
+        const id = `project-${Date.now()}`;
+        projects = [{ id, name: 'Новый ролик', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }];
+        saveProjects(projects);
+      }
+      const storedId = localStorage.getItem('viral-script-studio-active-project-v1');
+      setProjectStorage(projects.some((project) => project.id === storedId) ? storedId : projects[0].id);
+      renderProjectSwitcher();
+    }
+    function clearWorkspace() {
+      count = 0;
+      idea.textContent = '';
+      cards.innerHTML = ''; frames.innerHTML = ''; prompts.innerHTML = '';
+      storyboard.hidden = true; promptStage.hidden = true;
+      approveFrames.disabled = false; approveFrames.textContent = 'Approve all';
+      referenceFiles = []; referenceImages.value = ''; renderReferenceSlots();
+      refresh(); updateIdeaCounter(); refreshTimeline();
+    }
+    async function switchProject(projectId) {
+      if (projectId === activeProjectId) return;
+      saveDraft();
+      setProjectStorage(projectId);
+      clearWorkspace();
+      restoreDraft();
+      await restoreReferenceFiles();
+      renderProjectSwitcher(); updateWorkflowSidebar();
+    }
+    function createProject(name, seedState) {
+      const projects = getProjects();
+      const id = `project-${Date.now()}`;
+      projects.push({ id, name: name.trim() || 'Новый ролик', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+      saveProjects(projects);
+      if (seedState) localStorage.setItem(`viral-script-studio-draft-v2-${id}`, seedState);
+      return id;
+    }
+    newProjectButton.addEventListener('click', () => { projectNameInput.value = ''; projectModal.hidden = false; projectNameInput.focus(); });
+    cancelProjectButton.addEventListener('click', () => { projectModal.hidden = true; });
+    projectModal.addEventListener('click', (event) => { if (event.target === projectModal) projectModal.hidden = true; });
+    projectForm.addEventListener('submit', async (event) => {
+      event.preventDefault(); saveDraft();
+      const nextId = createProject(projectNameInput.value);
+      projectModal.hidden = true;
+      await switchProject(nextId);
+    });
+    projectSelect.addEventListener('change', () => { switchProject(projectSelect.value); });
+    duplicateProjectButton.addEventListener('click', async () => {
+      saveDraft();
+      const current = getProjects().find((project) => project.id === activeProjectId);
+      const state = localStorage.getItem(draftKey);
+      const nextId = createProject(`${current?.name || 'Проект'} — копия`, state);
+      await switchProject(nextId);
+    });
+    function exportPayload() {
+      return {
+        version: 1,
+        project: getProjects().find((project) => project.id === activeProjectId),
+        exportedAt: new Date().toISOString(),
+        idea: idea.innerText.trim(), style: visualStyle.value, duration, model: selectedModel,
+        scenarios: [...document.querySelectorAll('.script-text')].map((field) => field.value),
+        frames: [...frames.querySelectorAll('.frame')].map((frame, index) => ({ index: index + 1, duration: Number(frame.dataset.duration || 0), visual: frame.querySelector('.frame-visual')?.value || '', voiceover: frame.querySelector('.frame-voiceover')?.value || '' })),
+        prompts: [...document.querySelectorAll('.prompt-editable')].map((field, index) => ({ index: index + 1, prompt: field.innerText })),
+        references: referenceFiles.map((file, index) => ({ index: index + 1, name: file.name, type: file.type }))
+      };
+    }
+    function downloadFile(filename, contents, type = 'text/plain;charset=utf-8') {
+      const url = URL.createObjectURL(new Blob([contents], { type }));
+      const anchor = document.createElement('a'); anchor.href = url; anchor.download = filename; anchor.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+    exportStoryboardButton.addEventListener('click', () => {
+      const data = exportPayload();
+      const body = data.frames.map((frame) => `КАДР ${String(frame.index).padStart(2, '0')} · ${frame.duration} сек\nТаймлайн: ${data.frames.slice(0, frame.index - 1).reduce((sum, item) => sum + item.duration, 0)}–${data.frames.slice(0, frame.index).reduce((sum, item) => sum + item.duration, 0)} сек\nВизуал: ${frame.visual}\nДиктор: ${frame.voiceover || '—'}`).join('\n\n');
+      downloadFile('storyboard.txt', body);
+    });
+    exportPromptsButton.addEventListener('click', () => downloadFile('image-prompts.txt', exportPayload().prompts.map((item) => `PROMPT ${String(item.index).padStart(2, '0')}\n${item.prompt}`).join('\n\n')));
+    exportProjectButton.addEventListener('click', () => downloadFile('viral-script-project.json', JSON.stringify(exportPayload(), null, 2), 'application/json;charset=utf-8'));
+    importProjectButton.addEventListener('click', () => importProjectFile.click());
+    importProjectFile.addEventListener('change', async () => {
+      const file = importProjectFile.files?.[0];
+      if (!file) return;
+      try {
+        const payload = JSON.parse(await file.text());
+        if (!payload || !Array.isArray(payload.frames) || !Array.isArray(payload.scenarios)) throw new Error('Файл не похож на экспорт Viral Script Studio.');
+        saveDraft();
+        const nextId = createProject(`${payload.project?.name || 'Импорт'} — импорт`);
+        setProjectStorage(nextId); clearWorkspace();
+        idea.textContent = payload.idea || '';
+        visualStyle.value = payload.style || visualStyle.value;
+        applyStyleChoice(styleGrid.querySelector(`.style-option[data-style="${CSS.escape(visualStyle.value)}"]`));
+        setDuration(payload.duration || 30); setModel(payload.model || selectedModel);
+        payload.scenarios.forEach((script, index) => {
+          const card = document.createElement('article'); card.className = 'script-card';
+          card.innerHTML = `<div class="script-card-top"><h3>Сценарий ${index + 1}</h3><span class="badge">Импорт</span></div><textarea class="script-text"></textarea>`;
+          card.querySelector('.script-text').value = script; cards.append(card);
+        });
+        count = payload.scenarios.length; refresh();
+        if (payload.frames.length) renderStoryboard(payload.frames);
+        if (payload.prompts.length) { renderPrompts(); document.querySelectorAll('.prompt-editable').forEach((field, index) => { field.innerText = payload.prompts[index]?.prompt || field.innerText; }); }
+        renderProjectSwitcher(); updateIdeaCounter(); updateWorkflowSidebar(); saveDraft();
+      } catch (error) { showApiError(error.message || 'Не удалось импортировать проект.'); }
+      finally { importProjectFile.value = ''; }
+    });
     restoreApiSettings();
+    initializeProjects();
     restoreDraft();
     restoreReferenceFiles();
     connectionModalContent.append(apiBar);

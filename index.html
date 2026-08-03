@@ -961,9 +961,11 @@
       const prior = testConnectionButton.textContent;
       testConnectionButton.disabled = true; testConnectionButton.textContent = 'Проверяем…';
       try {
-        const response = await fetch('/api/workflow/scenario', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: modelIds[selectedModel] || 'openrouter/auto', apiKey: apiKey.value.trim() || undefined, system: 'Reply with exactly OK.', user: 'Connection test.' }) });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok || !payload.output) throw new Error(payload.error || 'Проверка не прошла.');
+        const connectionRequest = { system: 'Reply with exactly OK.', user: 'Connection test.' };
+        const response = await fetch('/api/workflow/scenario', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: modelIds[selectedModel] || 'openrouter/auto', apiKey: apiKey.value.trim() || undefined, ...connectionRequest }) }).catch(() => null);
+        const payload = response ? await response.json().catch(() => ({})) : {};
+        if ((!response || response.status === 404) && apiKey.value.trim()) await requestOpenRouterDirect(connectionRequest);
+        else if (!response?.ok || !payload.output) throw new Error(payload.error || 'Проверка не прошла.');
         apiStatus.textContent = 'Ключ и модель работают'; apiStatus.classList.add('is-ready'); clearApiError();
       } catch (error) { showApiError(error.message || 'Не удалось проверить ключ.'); }
       finally { testConnectionButton.disabled = false; testConnectionButton.textContent = prior; }

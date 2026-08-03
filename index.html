@@ -969,7 +969,7 @@
         const connectionRequest = { system: 'Reply with exactly OK.', user: 'Connection test.' };
         const response = await fetch('/api/workflow/scenario', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: modelIds[selectedModel] || 'openrouter/auto', apiKey: apiKey.value.trim() || undefined, ...connectionRequest }) }).catch(() => null);
         const payload = response ? await response.json().catch(() => ({})) : {};
-        if ((!response || response.status === 404) && apiKey.value.trim()) await requestOpenRouterDirect(connectionRequest);
+        if (!response?.ok && apiKey.value.trim()) await requestOpenRouterDirect(connectionRequest);
         else if (!response?.ok || !payload.output) {
           const message = typeof payload.error === 'string' ? payload.error : payload.error?.message || payload.message || `Проверка не прошла (HTTP ${response?.status || 'нет ответа'}).`;
           throw new Error(message);

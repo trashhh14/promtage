@@ -698,6 +698,7 @@
         const payload = await localResponse.json().catch(() => ({}));
         if (!localResponse.ok) {
           if (apiKey.value.trim()) return requestOpenRouterDirect(request);
+          if (localResponse.status === 503) return buildScriptPreview(request);
           throw new Error(payload?.error || 'Локальный сервер не смог выполнить запрос.');
         }
         if (!payload.output) throw new Error('Локальный сервер вернул пустой ответ.');
@@ -1055,6 +1056,7 @@
         const payload = await localResponse.json().catch(() => ({}));
         if (!localResponse.ok) {
           if (apiKey.value.trim()) return parseStoryboardOutput(await requestOpenRouterDirect(request));
+          if (localResponse.status === 503) return fitStoryboardDurations(buildFrames(script).map((visual) => ({ visual, duration: 3, voiceover: '' })));
           throw new Error(payload?.error || 'Не удалось создать раскадровку.');
         }
         return parseStoryboardOutput(payload.output);

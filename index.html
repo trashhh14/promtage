@@ -330,7 +330,7 @@
     .save-state { color:var(--subtle); font-size:12px; }
     .save-state::before { content:'•'; margin-right:5px; color:var(--accent); }
     .header-actions { display:flex; align-items:center; gap:8px; }
-    .header-connection,.header-settings { min-height:34px; border:1px solid var(--line); border-radius:10px; background:rgba(13,18,32,.72); color:var(--muted); cursor:pointer; }
+    .header-connection,.header-settings { min-height:34px; border:1px solid var(--line); border-radius:10px; background:rgba(13,18,32,.72); color:var(--muted); cursor:pointer; text-decoration:none; }
     .header-connection { display:flex; align-items:center; gap:7px; padding:0 10px; font-size:12px; }
     .header-connection:hover,.header-settings:hover { border-color:var(--strong-line); background:var(--hover); color:var(--text); }
     .connection-dot { width:7px; height:7px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 3px rgba(155,255,66,.1); }
@@ -469,7 +469,7 @@
     <header class="app-header" data-ui-enter>
       <a class="app-logo" href="#idea" aria-label="Viral Script Studio"><span class="app-logo-mark">✦</span><span>Viral Script Studio</span></a>
       <div class="project-meta"><div class="project-switcher"><select class="project-select" id="project-select" aria-label="Текущий проект"></select><button class="project-action" id="new-project" type="button">＋</button><button class="project-action" id="duplicate-project" type="button" title="Дублировать проект">⧉</button></div><span class="save-state" id="save-state">Сохранено</span></div>
-      <div class="header-actions"><button class="header-connection" id="plans-button" type="button" aria-haspopup="dialog"><span class="connection-dot"></span><span id="header-ai-status">Тариф Plus</span><span class="header-model" id="header-model-status">199 ₽ / мес</span></button><button class="header-settings" id="open-settings" type="button" aria-label="Тарифы">✦</button></div>
+      <div class="header-actions"><a class="header-connection" id="plans-button" href="./plans.html"><span class="connection-dot"></span><span id="header-ai-status">Тариф Plus</span><span class="header-model" id="header-model-status">199 ₽ / мес</span></a><a class="header-settings" id="open-settings" href="./plans.html" aria-label="Тарифы">✦</a></div>
     </header>
     <div class="app-layout">
       <nav class="workflow-sidebar" aria-label="Этапы проекта" data-ui-enter>
@@ -529,9 +529,6 @@
       <div class="connection-modal-head"><div><p class="eyebrow">НАСТРОЙКИ</p><h2 id="connection-modal-title">Подключения</h2><p>Ключ хранится только на вашем устройстве и используется для генерации.</p></div><button class="style-close" id="close-connection-modal" type="button" aria-label="Закрыть">×</button></div>
       <div id="connection-modal-content"></div>
     </div>
-  </div>
-  <div class="plans-modal" id="plans-modal" hidden role="dialog" aria-modal="true" aria-labelledby="plans-modal-title">
-    <div class="plans-dialog"><div class="plans-head"><div><p class="eyebrow">ПОДПИСКА</p><h2 id="plans-modal-title">Выберите тариф</h2><p>Никаких API‑ключей для пользователей. Генерация работает через AI‑инфраструктуру сервиса.</p></div><button class="style-close" id="close-plans-modal" type="button" aria-label="Закрыть">×</button></div><div class="plans-grid"><article class="plan-card" data-plan-card="plus"><span class="plan-kicker">Для старта</span><h3>Plus</h3><p class="plan-price">199 ₽ <span>/ месяц</span></p><ul><li>40 сценариев в месяц</li><li>Раскадровка и image‑промты</li><li>Базовая скорость генерации</li></ul><button class="button ghost" type="button" data-select-plan="plus">Выбрать Plus</button></article><article class="plan-card" data-plan-card="pro"><span class="plan-kicker">Для регулярной работы</span><h3>Pro</h3><p class="plan-price">369 ₽ <span>/ месяц</span></p><ul><li>200 сценариев в месяц</li><li>Все инструменты раскадровки</li><li>Приоритетная генерация</li></ul><button class="button primary" type="button" data-select-plan="pro">Выбрать Pro</button></article></div></div>
   </div>
   <div class="project-modal" id="project-modal" hidden role="dialog" aria-modal="true" aria-labelledby="project-modal-title">
     <div class="project-modal-dialog"><h2 id="project-modal-title">Новый проект</h2><p>Проекты сохраняются на этом устройстве. Экспортируйте файл, чтобы передать проект другому человеку или перенести в другой браузер.</p><form class="project-modal-form" id="project-form"><input id="project-name-input" maxlength="70" required placeholder="Например: Коллекционер взглядов"><div class="project-modal-actions"><button class="project-action" id="cancel-project" type="button">Отмена</button><button class="button primary" type="submit">Создать проект</button></div></form></div>
@@ -595,8 +592,6 @@
     const testConnectionButton = document.querySelector('#test-connection');
     const connectionModal = document.querySelector('#connection-modal');
     const connectionModalContent = document.querySelector('#connection-modal-content');
-    const connectionSettings = document.querySelector('#plans-button');
-    const openSettings = document.querySelector('#open-settings');
     const closeConnectionModal = document.querySelector('#close-connection-modal');
     const headerAiStatus = document.querySelector('#header-ai-status');
     const headerModelStatus = document.querySelector('#header-model-status');
@@ -615,8 +610,6 @@
     const exportProjectButton = document.querySelector('#export-project');
     const importProjectButton = document.querySelector('#import-project');
     const importProjectFile = document.querySelector('#import-project-file');
-    const plansModal = document.querySelector('#plans-modal');
-    const closePlansModal = document.querySelector('#close-plans-modal');
     let count = 0;
     let duration = 30;
     let selectedModel = 'Claude Sonnet 4.6';
@@ -1446,25 +1439,7 @@
     initializeProjects();
     restoreDraft();
     restoreReferenceFiles();
-    function refreshPlanUi() {
-      document.querySelectorAll('[data-plan-card]').forEach((card) => card.classList.toggle('is-selected', card.dataset.planCard === activePlan));
-      document.querySelectorAll('[data-select-plan]').forEach((button) => { button.textContent = button.dataset.selectPlan === activePlan ? 'Текущий тариф' : `Выбрать ${plans[button.dataset.selectPlan].name}`; });
-      updateApiStatus();
-    }
-    function openPlansModal() { plansModal.hidden = false; refreshPlanUi(); }
-    function closePlans() { plansModal.hidden = true; }
-    connectionSettings.addEventListener('click', openPlansModal);
-    openSettings.addEventListener('click', openPlansModal);
-    closePlansModal.addEventListener('click', closePlans);
-    plansModal.addEventListener('click', (event) => { if (event.target === plansModal) closePlans(); });
-    plansModal.addEventListener('click', (event) => {
-      const button = event.target.closest('[data-select-plan]');
-      if (!button) return;
-      activePlan = button.dataset.selectPlan;
-      localStorage.setItem('viral-script-studio-plan-v1', activePlan);
-      refreshPlanUi(); closePlans(); saveDraft();
-    });
-    refreshPlanUi();
+    updateApiStatus();
     const ideaCounter = document.createElement('span');
     ideaCounter.className = 'idea-char-count';
     ideaCounter.setAttribute('aria-live', 'polite');

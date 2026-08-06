@@ -652,6 +652,7 @@
       localStorage.removeItem(apiSettingsKey);
     }
     function restoreApiSettings() {
+      localStorage.removeItem(apiSettingsKey);
       apiKey.value = ''; apiRemember.checked = false;
       updateApiStatus();
     }

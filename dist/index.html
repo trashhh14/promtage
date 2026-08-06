@@ -629,7 +629,7 @@
     function updateApiStatus() {
       apiStatus.textContent = 'AI включён по подписке';
       apiStatus.classList.add('is-ready');
-      headerAiStatus.textContent = `Тариф ${plans[activePlan].name}`;
+      headerAiStatus.textContent = 'Тарифы →';
       headerModelStatus.textContent = plans[activePlan].price;
     }
     function showApiError(message) {

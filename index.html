@@ -443,6 +443,24 @@
     .quality-tools { margin-top:10px; }
     .quality-action { min-height:30px; padding:0 9px; font-size:11px; }
     .project-summary { margin:0; color:var(--subtle); font-size:12px; }
+    .plans-modal { position:fixed; inset:0; z-index:70; display:grid; place-items:center; padding:24px; background:rgba(3,6,12,.7); backdrop-filter:blur(12px); }
+    .plans-modal[hidden] { display:none; }
+    .plans-dialog { width:min(760px,100%); padding:26px; border:1px solid var(--strong-line); border-radius:20px; background:linear-gradient(145deg,#12192a,#090e18); box-shadow:0 28px 90px rgba(0,0,0,.56); }
+    .plans-head { display:flex; justify-content:space-between; gap:18px; margin-bottom:20px; }
+    .plans-head h2 { font-size:28px; }
+    .plans-head p { margin:7px 0 0; color:var(--muted); font-size:14px; }
+    .plans-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    .plan-card { display:flex; flex-direction:column; min-height:290px; padding:20px; border:1px solid var(--strong-line); border-radius:16px; background:#0c1220; }
+    .plan-card.is-selected { border-color:var(--accent); box-shadow:0 0 0 1px rgba(155,255,66,.2),0 14px 32px rgba(0,0,0,.24); }
+    .plan-kicker { color:var(--violet); font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+    .plan-card h3 { margin:8px 0 4px; font-size:24px; }
+    .plan-price { margin:0; font-size:32px; font-weight:800; letter-spacing:-.04em; }
+    .plan-price span { color:var(--muted); font-size:13px; font-weight:600; letter-spacing:0; }
+    .plan-card ul { display:grid; gap:9px; margin:20px 0; padding:0; list-style:none; color:#cdd5e3; font-size:13px; }
+    .plan-card li::before { content:'✓'; margin-right:8px; color:var(--accent); }
+    .plan-card .button { width:100%; margin-top:auto; }
+    .model-control { display:none; }
+    @media (max-width:600px) { .plans-modal { align-items:end; padding:10px; } .plans-dialog { padding:20px; border-radius:18px; } .plans-grid { grid-template-columns:1fr; } .plan-card { min-height:0; } }
     @media (max-width:760px) { .project-switcher { display:none; } .stage-tools { width:100%; justify-content:stretch; } .stage-tools .export-button { flex:1; } .frame-actions { align-items:flex-start; flex-direction:column; } .frame-timeline { flex-wrap:wrap; } }
   </style>
 </head>
@@ -451,7 +469,7 @@
     <header class="app-header" data-ui-enter>
       <a class="app-logo" href="#idea" aria-label="Viral Script Studio"><span class="app-logo-mark">✦</span><span>Viral Script Studio</span></a>
       <div class="project-meta"><div class="project-switcher"><select class="project-select" id="project-select" aria-label="Текущий проект"></select><button class="project-action" id="new-project" type="button">＋</button><button class="project-action" id="duplicate-project" type="button" title="Дублировать проект">⧉</button></div><span class="save-state" id="save-state">Сохранено</span></div>
-      <div class="header-actions"><button class="header-connection" id="connection-settings" type="button" aria-haspopup="dialog"><span class="connection-dot"></span><span id="header-ai-status">Подключение AI</span><span class="header-model" id="header-model-status">Claude Sonnet 4.6</span></button><button class="header-settings" id="open-settings" type="button" aria-label="Настройки">⚙</button></div>
+      <div class="header-actions"><button class="header-connection" id="plans-button" type="button" aria-haspopup="dialog"><span class="connection-dot"></span><span id="header-ai-status">Тариф Plus</span><span class="header-model" id="header-model-status">199 ₽ / мес</span></button><button class="header-settings" id="open-settings" type="button" aria-label="Тарифы">✦</button></div>
     </header>
     <div class="app-layout">
       <nav class="workflow-sidebar" aria-label="Этапы проекта" data-ui-enter>
@@ -462,7 +480,7 @@
       </nav>
       <main class="app" data-ui-enter>
     <div class="topline"><div class="brand"><span class="brand-mark">✦</span> Viral Script Studio</div><span class="mode">AI workflow / сценарии</span></div>
-    <section class="api-bar" aria-label="Подключение AI-модели">
+    <section class="api-bar" hidden aria-label="Служебные настройки AI">
       <span class="api-bar-title">AI connection</span>
       <select class="api-provider" id="api-provider" aria-label="Провайдер модели"><option value="openrouter">OpenRouter</option></select>
       <div class="api-key-wrap"><input class="api-key-input" id="api-key" type="password" autocomplete="off" spellcheck="false" placeholder="Вставьте OpenRouter API key"><button class="api-key-toggle" id="api-key-toggle" type="button" aria-label="Показать API-ключ">◉</button></div>
@@ -511,6 +529,9 @@
       <div class="connection-modal-head"><div><p class="eyebrow">НАСТРОЙКИ</p><h2 id="connection-modal-title">Подключения</h2><p>Ключ хранится только на вашем устройстве и используется для генерации.</p></div><button class="style-close" id="close-connection-modal" type="button" aria-label="Закрыть">×</button></div>
       <div id="connection-modal-content"></div>
     </div>
+  </div>
+  <div class="plans-modal" id="plans-modal" hidden role="dialog" aria-modal="true" aria-labelledby="plans-modal-title">
+    <div class="plans-dialog"><div class="plans-head"><div><p class="eyebrow">ПОДПИСКА</p><h2 id="plans-modal-title">Выберите тариф</h2><p>Никаких API‑ключей для пользователей. Генерация работает через AI‑инфраструктуру сервиса.</p></div><button class="style-close" id="close-plans-modal" type="button" aria-label="Закрыть">×</button></div><div class="plans-grid"><article class="plan-card" data-plan-card="plus"><span class="plan-kicker">Для старта</span><h3>Plus</h3><p class="plan-price">199 ₽ <span>/ месяц</span></p><ul><li>40 сценариев в месяц</li><li>Раскадровка и image‑промты</li><li>Базовая скорость генерации</li></ul><button class="button ghost" type="button" data-select-plan="plus">Выбрать Plus</button></article><article class="plan-card" data-plan-card="pro"><span class="plan-kicker">Для регулярной работы</span><h3>Pro</h3><p class="plan-price">369 ₽ <span>/ месяц</span></p><ul><li>200 сценариев в месяц</li><li>Все инструменты раскадровки</li><li>Приоритетная генерация</li></ul><button class="button primary" type="button" data-select-plan="pro">Выбрать Pro</button></article></div></div>
   </div>
   <div class="project-modal" id="project-modal" hidden role="dialog" aria-modal="true" aria-labelledby="project-modal-title">
     <div class="project-modal-dialog"><h2 id="project-modal-title">Новый проект</h2><p>Проекты сохраняются на этом устройстве. Экспортируйте файл, чтобы передать проект другому человеку или перенести в другой браузер.</p><form class="project-modal-form" id="project-form"><input id="project-name-input" maxlength="70" required placeholder="Например: Коллекционер взглядов"><div class="project-modal-actions"><button class="project-action" id="cancel-project" type="button">Отмена</button><button class="button primary" type="submit">Создать проект</button></div></form></div>
@@ -574,7 +595,7 @@
     const testConnectionButton = document.querySelector('#test-connection');
     const connectionModal = document.querySelector('#connection-modal');
     const connectionModalContent = document.querySelector('#connection-modal-content');
-    const connectionSettings = document.querySelector('#connection-settings');
+    const connectionSettings = document.querySelector('#plans-button');
     const openSettings = document.querySelector('#open-settings');
     const closeConnectionModal = document.querySelector('#close-connection-modal');
     const headerAiStatus = document.querySelector('#header-ai-status');
@@ -594,11 +615,15 @@
     const exportProjectButton = document.querySelector('#export-project');
     const importProjectButton = document.querySelector('#import-project');
     const importProjectFile = document.querySelector('#import-project-file');
+    const plansModal = document.querySelector('#plans-modal');
+    const closePlansModal = document.querySelector('#close-plans-modal');
     let count = 0;
     let duration = 30;
     let selectedModel = 'Claude Sonnet 4.6';
     const projectRegistryKey = 'viral-script-studio-projects-v1';
     let activeProjectId = '';
+    let activePlan = localStorage.getItem('viral-script-studio-plan-v1') || 'plus';
+    const plans = { plus: { name: 'Plus', price: '199 ₽ / мес', limit: 40 }, pro: { name: 'Pro', price: '369 ₽ / мес', limit: 200 } };
     const apiSettingsKey = 'viral-script-studio-openrouter-v1';
     const modelIds = {
       'Claude Sonnet 4.6': 'anthropic/claude-sonnet-4',
@@ -609,10 +634,10 @@
       'Gemini 3.5 Flash': 'google/gemini-3.5-flash-lite'
     };
     function updateApiStatus() {
-      const hasKey = Boolean(apiKey.value.trim());
-      apiStatus.textContent = hasKey ? 'Ключ добавлен · проверка при запуске' : 'Демо-режим';
-      apiStatus.classList.toggle('is-ready', hasKey);
-      headerAiStatus.textContent = hasKey ? 'OpenRouter готов' : 'Подключение AI';
+      apiStatus.textContent = 'AI включён по подписке';
+      apiStatus.classList.add('is-ready');
+      headerAiStatus.textContent = `Тариф ${plans[activePlan].name}`;
+      headerModelStatus.textContent = plans[activePlan].price;
     }
     function showApiError(message) {
       apiError.textContent = message;
@@ -624,20 +649,10 @@
     }
     function saveApiSettings() {
       updateApiStatus();
-      try {
-        if (apiRemember.checked && apiKey.value.trim()) localStorage.setItem(apiSettingsKey, JSON.stringify({ provider: apiProvider.value, key: apiKey.value.trim() }));
-        else localStorage.removeItem(apiSettingsKey);
-      } catch (_) { }
+      localStorage.removeItem(apiSettingsKey);
     }
     function restoreApiSettings() {
-      try {
-        const settings = JSON.parse(localStorage.getItem(apiSettingsKey));
-        if (settings?.key) {
-          apiProvider.value = settings.provider || 'openrouter';
-          apiKey.value = settings.key;
-          apiRemember.checked = true;
-        }
-      } catch (_) { }
+      apiKey.value = ''; apiRemember.checked = false;
       updateApiStatus();
     }
     function engineRequest(topic) {
@@ -691,22 +706,18 @@
           model: modelIds[selectedModel] || 'openrouter/auto',
           system: request.system,
           user: request.user,
-          apiKey: apiKey.value.trim() || undefined
+          plan: activePlan
         })
       }).catch(() => null);
       if (localResponse && localResponse.status !== 404) {
         const payload = await localResponse.json().catch(() => ({}));
         if (!localResponse.ok) {
-          if (apiKey.value.trim()) return requestOpenRouterDirect(request);
-          if (localResponse.status === 503) return buildScriptPreview(request);
-          throw new Error(payload?.error || 'Локальный сервер не смог выполнить запрос.');
+          throw new Error(payload?.error || 'Сервис генерации временно недоступен.');
         }
         if (!payload.output) throw new Error('Локальный сервер вернул пустой ответ.');
         return payload.output;
       }
-      if (apiProvider.value === 'openrouter' && apiKey.value.trim()) return requestOpenRouterDirect(request);
-      if (typeof window.scriptEngineGenerate === 'function') return window.scriptEngineGenerate(request);
-      return buildScriptPreview(request);
+      throw new Error('Сервис генерации недоступен. Проверьте подключение сервера.');
     }
     async function rewriteWithAi(text, instruction) {
       const request = {
@@ -715,14 +726,13 @@
       };
       const localResponse = await fetch('/api/workflow/scenario', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: modelIds[selectedModel] || 'openrouter/auto', system: request.system, user: request.user, apiKey: apiKey.value.trim() || undefined })
+        body: JSON.stringify({ model: modelIds[selectedModel] || 'openrouter/auto', system: request.system, user: request.user, plan: activePlan })
       }).catch(() => null);
       if (localResponse && localResponse.ok) {
         const payload = await localResponse.json().catch(() => ({}));
         if (payload.output) return payload.output.trim();
       }
-      if (apiKey.value.trim()) return (await requestOpenRouterDirect(request)).trim();
-      throw new Error('Для AI-правки добавьте ключ в настройках подключения.');
+      throw new Error('AI-правка сейчас недоступна. Попробуйте позже.');
     }
     cards.addEventListener('click', async (event) => {
       const button = event.target.closest('[data-rewrite]');
@@ -1053,19 +1063,16 @@
       const localResponse = await fetch('/api/workflow/storyboard', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: modelIds[selectedModel] || 'openrouter/auto', system: request.system, user: request.user, apiKey: apiKey.value.trim() || undefined })
+        body: JSON.stringify({ model: modelIds[selectedModel] || 'openrouter/auto', system: request.system, user: request.user, plan: activePlan })
       }).catch(() => null);
       if (localResponse && localResponse.status !== 404) {
         const payload = await localResponse.json().catch(() => ({}));
         if (!localResponse.ok) {
-          if (apiKey.value.trim()) return parseStoryboardOutput(await requestOpenRouterDirect(request));
-          if (localResponse.status === 503) return fitStoryboardDurations(buildFrames(script).map((visual) => ({ visual, duration: 3, voiceover: '' })));
           throw new Error(payload?.error || 'Не удалось создать раскадровку.');
         }
         return parseStoryboardOutput(payload.output);
       }
-      if (apiKey.value.trim()) return parseStoryboardOutput(await requestOpenRouterDirect(request));
-      return fitStoryboardDurations(buildFrames(script).map((visual) => ({ visual, duration: 3, voiceover: '' })));
+      throw new Error('Сервис раскадровки недоступен. Попробуйте позже.');
     }
     function renderStoryboard(frameItems) {
       frames.innerHTML = '';
@@ -1438,19 +1445,25 @@
     initializeProjects();
     restoreDraft();
     restoreReferenceFiles();
-    connectionModalContent.append(apiBar);
-    function openConnectionModal() {
-      connectionModal.hidden = false;
-      if (window.gsap && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) gsap.fromTo(connectionModal.querySelector('.connection-modal-dialog'), { opacity: 0, scale: .98, y: 8 }, { opacity: 1, scale: 1, y: 0, duration: .22, ease: 'power2.out' });
+    function refreshPlanUi() {
+      document.querySelectorAll('[data-plan-card]').forEach((card) => card.classList.toggle('is-selected', card.dataset.planCard === activePlan));
+      document.querySelectorAll('[data-select-plan]').forEach((button) => { button.textContent = button.dataset.selectPlan === activePlan ? 'Текущий тариф' : `Выбрать ${plans[button.dataset.selectPlan].name}`; });
+      updateApiStatus();
     }
-    function closeConnection() {
-      if (window.gsap && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) gsap.to(connectionModal.querySelector('.connection-modal-dialog'), { opacity: 0, scale: .98, y: 8, duration: .16, ease: 'power2.in', onComplete: () => { connectionModal.hidden = true; } });
-      else connectionModal.hidden = true;
-    }
-    connectionSettings.addEventListener('click', openConnectionModal);
-    openSettings.addEventListener('click', openConnectionModal);
-    closeConnectionModal.addEventListener('click', closeConnection);
-    connectionModal.addEventListener('click', (event) => { if (event.target === connectionModal) closeConnection(); });
+    function openPlansModal() { plansModal.hidden = false; refreshPlanUi(); }
+    function closePlans() { plansModal.hidden = true; }
+    connectionSettings.addEventListener('click', openPlansModal);
+    openSettings.addEventListener('click', openPlansModal);
+    closePlansModal.addEventListener('click', closePlans);
+    plansModal.addEventListener('click', (event) => { if (event.target === plansModal) closePlans(); });
+    plansModal.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-select-plan]');
+      if (!button) return;
+      activePlan = button.dataset.selectPlan;
+      localStorage.setItem('viral-script-studio-plan-v1', activePlan);
+      refreshPlanUi(); closePlans(); saveDraft();
+    });
+    refreshPlanUi();
     const ideaCounter = document.createElement('span');
     ideaCounter.className = 'idea-char-count';
     ideaCounter.setAttribute('aria-live', 'polite');

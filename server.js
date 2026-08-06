@@ -49,9 +49,8 @@ async function generateScenario(request, response) {
   loadLocalEnv();
   if (isRateLimited(request)) return sendJson(response, 429, { error: 'Слишком много запросов. Подождите минуту и попробуйте снова.' });
   const body = await readJson(request);
-  const acceptsBrowserKey = process.env.ALLOW_CLIENT_API_KEYS === 'true' || process.env.NODE_ENV !== 'production';
-  const apiKey = process.env.OPENROUTER_API_KEY || (acceptsBrowserKey ? body.apiKey : '');
-  if (!apiKey) return sendJson(response, 503, { error: 'Добавьте OPENROUTER_API_KEY в .env.local или вставьте ключ в интерфейс.' });
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) return sendJson(response, 503, { error: 'AI‑сервер ещё не настроен. Добавьте OPENROUTER_API_KEY в .env.local.' });
   if (!body.system || !body.user) return sendJson(response, 400, { error: 'Не хватает данных сценарного движка.' });
 
   const upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -62,7 +61,7 @@ async function generateScenario(request, response) {
       'User-Agent': 'Viral Script Studio/1.0'
     },
     body: JSON.stringify({
-      model: body.model || 'openrouter/auto',
+      model: body.plan === 'pro' ? (process.env.PRO_MODEL || 'anthropic/claude-sonnet-4') : (process.env.PLUS_MODEL || 'google/gemini-3.5-flash-lite'),
       messages: [
         { role: 'system', content: body.system },
         { role: 'user', content: body.user }
@@ -89,7 +88,7 @@ http.createServer(async (request, response) => {
     const url = new URL(request.url, 'http://127.0.0.1');
     if (request.method === 'GET' && url.pathname === '/api/health') {
       loadLocalEnv();
-      return sendJson(response, 200, { ok: true, serverKeyConfigured: Boolean(process.env.OPENROUTER_API_KEY), acceptsBrowserKey: process.env.ALLOW_CLIENT_API_KEYS === 'true' || process.env.NODE_ENV !== 'production' });
+      return sendJson(response, 200, { ok: true, serverKeyConfigured: Boolean(process.env.OPENROUTER_API_KEY), acceptsBrowserKey: false });
     }
     if (request.method === 'POST' && ['/api/workflow/scenario', '/api/workflow/storyboard'].includes(url.pathname)) return generateScenario(request, response);
     if (request.method !== 'GET' && request.method !== 'HEAD') return sendJson(response, 405, { error: 'Method not allowed' });

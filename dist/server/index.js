@@ -14,14 +14,14 @@ function limited(request) {
 
 async function generate(request, env) {
   if (limited(request)) return json({ error: 'Слишком много запросов. Подождите минуту и попробуйте снова.' }, 429);
-  if (!env.OPENROUTER_API_KEY) return json({ error: 'AI-сервер ещё не настроен. Добавьте свой ключ в настройках или обратитесь к владельцу демо.' }, 503);
+  if (!env.OPENROUTER_API_KEY) return json({ error: 'AI-сервер ещё не настроен. Обратитесь к владельцу сервиса.' }, 503);
   let body;
   try { body = await request.json(); } catch (_) { return json({ error: 'Некорректный запрос.' }, 400); }
   if (!body?.system || !body?.user) return json({ error: 'Не хватает данных для генерации.' }, 400);
   const upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: { Authorization: `Bearer ${env.OPENROUTER_API_KEY}`, 'content-type': 'application/json', 'X-Title': 'Viral Script Studio' },
-    body: JSON.stringify({ model: body.model || 'openrouter/auto', messages: [{ role: 'system', content: body.system }, { role: 'user', content: body.user }], temperature: 0.85 })
+    body: JSON.stringify({ model: body.plan === 'pro' ? (env.PRO_MODEL || 'anthropic/claude-sonnet-4') : (env.PLUS_MODEL || 'google/gemini-3.5-flash-lite'), messages: [{ role: 'system', content: body.system }, { role: 'user', content: body.user }], temperature: 0.85 })
   });
   const raw = await upstream.text();
   let payload = {}; try { payload = JSON.parse(raw); } catch (_) { }

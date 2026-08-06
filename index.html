@@ -4,13 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Viral Script Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <style>
-    :root { color-scheme:dark; --bg:#080a10; --panel:#11151f; --panel-2:#191f2c; --text:#f8faff; --muted:#9ca7bd; --line:#2a3447; --accent:#b6ff3b; --accent-ink:#122000; --violet:#8f7cff; --ui-font:-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif; }
+    :root { color-scheme:dark; --bg:#080a10; --panel:#11151f; --panel-2:#191f2c; --text:#f8faff; --muted:#9ca7bd; --line:#2a3447; --accent:#b6ff3b; --accent-ink:#122000; --violet:#8f7cff; --ui-font:"Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif; }
     * { box-sizing:border-box; }
     body { margin:0; min-width:320px; background:radial-gradient(circle at 92% 0%, rgba(95,67,191,.38) 0, transparent 34rem),radial-gradient(circle at -5% 34%, rgba(63,157,151,.16) 0, transparent 32rem),var(--bg); color:var(--text); font-family:var(--ui-font); font-synthesis:none; font-optical-sizing:auto; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
-    button, textarea, select, input { font:inherit; }
+    button, textarea, select, input, option { font-family:var(--ui-font) !important; font:inherit; }
     .app { width:min(1440px, calc(100% - 48px)); margin:0 auto; padding:28px 0 64px; }
     .topline { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:26px; }
     .brand { display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:-.04em; }

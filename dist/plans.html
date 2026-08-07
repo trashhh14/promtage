@@ -6,7 +6,7 @@
   <title>Тарифы — Viral Script Studio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root { color-scheme:dark; --bg:#070a11; --panel:#101625; --line:#2a344a; --text:#f7f8fb; --muted:#96a2b8; --accent:#9bff42; --violet:#8f7cff; --ui-font:"Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif; }
     * { box-sizing:border-box; } button, input, select, textarea, option { font-family:var(--ui-font) !important; } body { margin:0; min-width:320px; min-height:100vh; color:var(--text); font:15px/1.45 var(--ui-font); font-optical-sizing:auto; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; background:radial-gradient(circle at 82% 8%,rgba(100,72,216,.2),transparent 30%),radial-gradient(circle at 20% 100%,rgba(121,255,66,.09),transparent 34%),var(--bg); }
@@ -29,6 +29,24 @@
     .pro .choose { border-color:var(--accent); color:#0a1008; background:var(--accent); box-shadow:0 12px 25px rgba(155,255,66,.18); } .pro .choose:hover { background:#b6ff73; }
     .notice { margin:26px 0 0; color:#7e8ba3; font-size:12px; text-align:center; } .current { margin-top:18px; color:#c9ff9a; font-size:13px; font-weight:750; text-align:center; }
     @media (max-width:650px) { .page { width:min(100% - 28px,1120px); padding-top:18px; } .intro { padding:52px 0 28px; } .plans { grid-template-columns:1fr; } .card { min-height:0; } h1 { font-size:45px; } }
+
+    /* Editorial subscription page */
+    :root { color-scheme:light; --cream:#ffffeb; --stone:#e4e4d0; --ink:#1a1a1a; --forest:#034f46; --lavender:#f0d7ff; --ember:#ffa946; --fog:#8a8a80; --ui-font:"Figtree", ui-sans-serif, system-ui, sans-serif; --display-font:"EB Garamond", Georgia, serif; }
+    html,body { background:var(--cream); } body { color:var(--ink); font-family:var(--ui-font); background:var(--cream); } button,input,select,textarea,option { font-family:var(--ui-font) !important; }
+    .page { width:min(1200px,calc(100% - 32px)); padding:20px 0 96px; }
+    .nav { min-height:58px; padding:8px 12px; border:2px solid var(--ink); border-radius:999px; background:var(--cream); }
+    .brand { color:var(--ink); font-weight:700; } .mark { width:32px; height:32px; border:2px solid var(--ink); border-radius:50%; background:var(--lavender); color:var(--ink); box-shadow:none; }
+    .back { min-height:38px; border:2px solid var(--ink); border-radius:12px; color:var(--ink); font-weight:600; } .back:hover { border-color:var(--ink); background:var(--lavender); }
+    .intro { max-width:850px; padding:104px 0 48px; } .eyebrow { color:var(--forest); font-weight:700; letter-spacing:.09em; }
+    h1,h2 { font-family:var(--display-font) !important; font-weight:400; color:var(--ink); } h1 { max-width:840px; font-size:clamp(64px,9vw,120px); line-height:.84; letter-spacing:-.055em; } .intro p:last-child { color:var(--ink); font-size:20px; line-height:1.35; }
+    .plans { gap:32px; } .card { min-height:440px; padding:32px; border:2px solid var(--ink); border-radius:32px; background:var(--cream); box-shadow:none; } .card.pro { border-color:var(--ink); background:var(--ink); } .card.pro::after { display:none; }
+    .badge { padding:8px 16px; background:var(--forest); color:var(--cream); font-size:14px; font-weight:500; } .pro .badge { background:transparent; border:2px solid var(--cream); color:var(--cream); }
+    h2 { margin:24px 0 8px; font-size:56px; line-height:.9; letter-spacing:-.04em; } .desc { min-height:42px; color:var(--fog); font-size:16px; } .pro h2,.pro .desc,.pro ul { color:var(--cream); }
+    .price { margin:36px 0 26px; font-family:var(--display-font); font-size:64px; font-weight:400; letter-spacing:-.055em; } .price span { color:var(--fog); font-family:var(--ui-font); font-size:16px; font-weight:500; } .pro .price { color:var(--cream); }
+    ul { color:var(--ink); font-size:16px; } li::before { color:var(--forest); } .pro li::before { color:var(--ember); }
+    .choose { min-height:52px; border:2px solid var(--ink); border-radius:12px; background:var(--lavender); color:var(--ink); font:500 16px var(--ui-font); box-shadow:none; } .choose:hover { border-color:var(--ink); background:#e5c2fb; } .pro .choose { border-color:var(--cream); background:var(--lavender); color:var(--ink); box-shadow:none; }
+    .notice,.current { color:var(--fog); font-size:14px; } .current { color:var(--forest); font-weight:600; }
+    @media (max-width:650px) { .page { width:min(100% - 20px,1200px); } .nav { border-radius:24px; } .intro { padding:72px 0 32px; } h1 { font-size:64px; } .plans { gap:20px; } .card { padding:24px; } h2 { font-size:48px; } }
   </style>
 </head>
 <body>

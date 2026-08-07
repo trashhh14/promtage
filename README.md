@@ -105,10 +105,31 @@ Nuxt auto-import: `UiAppButton`, `LandingLandingHero`, `ProjectsProjectCard`, `S
 
 | URL | Файл | Описание |
 |-----|------|----------|
-| `/` | `pages/index.vue` | Лендинг |
-| `/projects` | `pages/projects.vue` | Библиотека проектов |
-| `/plans` | `pages/plans.vue` | Тарифы |
+| `/login` | `pages/login.vue` | Вход по паролю (`4andrey`) |
+| `/` | `pages/index.vue` | **Один большой лендинг** (все секции) |
+| `/projects` | `pages/projects.vue` | Библиотека проектов (после входа) |
 | `/studio` | `pages/studio.vue` | Воркспейс (`?project=id`) |
+| `/plans` | `pages/plans.vue` | **Редирект на `/#pricing`**, оплата отключена |
+
+### Доступ
+
+- Глобальный middleware `auth.global.ts`
+- Пароль: `4andrey` (см. `useAuth.ts`)
+- Cookie `vss-gate` + sessionStorage
+
+### Лендинг-секции
+
+1. Hero  
+2. Как это работает (`#how-it-works`)  
+3. Chamber  
+4. Проекты (`#projects`)  
+5. Студия (`#studio`)  
+6. Тарифы (`#pricing`) — **кнопки оплаты закомментированы**  
+7. Closing  
+
+### Платёжка
+
+Временно выключена: UI «Оплата скоро», checkout-код в `LandingPricing.vue` в комментарии. Отдельная страница `/plans` только редиректит на якорь.
 
 ### Продуктовый поток
 

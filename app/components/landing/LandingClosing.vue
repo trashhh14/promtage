@@ -5,13 +5,13 @@
       <h2>Пусть следующая идея не останется в заметках.</h2>
     </div>
     <div>
-      <p>Открой свои проекты бесплатно или посмотри, какой тариф подходит под твой темп работы.</p>
+      <p>Открой студию, собери проекты или посмотри тарифы — всё на одном лендинге, оплата пока отключена.</p>
       <div class="actions">
-        <UiAppButton variant="primary" size="lg" to="/projects">
-          К проектам →
+        <UiAppButton variant="primary" size="lg" to="/studio">
+          Открыть студию →
         </UiAppButton>
-        <UiAppButton size="lg" to="/plans">
-          Тарифы
+        <UiAppButton size="lg" to="/projects">
+          Проекты
         </UiAppButton>
       </div>
     </div>

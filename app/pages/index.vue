@@ -4,10 +4,15 @@ useHead({ title: 'Viral Script Studio — из идеи в ролик' })
 
 <template>
   <main class="shell">
-    <UiAppNav active="home" cta-label="Попробовать бесплатно" cta-to="/projects" />
-    <LandingLandingHero />
-    <LandingLandingFlow />
-    <LandingLandingChamber />
-    <LandingLandingClosing />
+    <UiAppNav cta-label="Открыть студию" cta-to="/studio" />
+
+    <!-- Бывшие отдельные страницы → один лендинг -->
+    <LandingHero />
+    <LandingFlow />
+    <LandingChamber />
+    <LandingProjects />
+    <LandingStudio />
+    <LandingPricing />
+    <LandingClosing />
   </main>
 </template>

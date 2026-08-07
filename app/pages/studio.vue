@@ -347,7 +347,7 @@ watch(() => route.query.project, (value) => {
 
 <template>
   <div class="shell studio-shell">
-    <StudioStudioHeader
+    <StudioHeader
       :projects="sortedProjects"
       :active-id="activeId"
       :plan-label="currentPlan.priceLabel + ' / мес'"

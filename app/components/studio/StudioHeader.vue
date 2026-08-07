@@ -44,7 +44,8 @@ const emit = defineEmits<{
       </button>
     </div>
     <div class="actions">
-      <NuxtLink class="plans" to="/plans">
+      <!-- Платёжка временно отключена: ссылка только на блок тарифов лендинга -->
+      <NuxtLink class="plans" to="/#pricing">
         <span>Тарифы</span>
         <span class="price">{{ planLabel }}</span>
       </NuxtLink>

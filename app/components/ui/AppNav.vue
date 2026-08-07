@@ -1,12 +1,10 @@
 <script setup lang="ts">
 withDefaults(defineProps<{
-  active?: 'home' | 'projects' | 'plans' | 'studio'
   ctaLabel?: string
   ctaTo?: string
 }>(), {
-  active: 'home',
-  ctaLabel: 'Проекты',
-  ctaTo: '/projects'
+  ctaLabel: 'Открыть студию',
+  ctaTo: '/studio'
 })
 </script>
 
@@ -16,12 +14,10 @@ withDefaults(defineProps<{
       Viral Script Studio
     </NuxtLink>
     <div class="actions">
-      <NuxtLink class="link" :class="{ active: active === 'projects' }" to="/projects">
-        Проекты
-      </NuxtLink>
-      <NuxtLink class="link" :class="{ active: active === 'plans' }" to="/plans">
-        Тарифы
-      </NuxtLink>
+      <a class="link" href="#how-it-works">Как это работает</a>
+      <a class="link" href="#projects">Проекты</a>
+      <a class="link" href="#studio">Студия</a>
+      <a class="link" href="#pricing">Тарифы</a>
       <slot name="extra" />
       <UiAppButton variant="primary" :to="ctaTo">
         {{ ctaLabel }}
@@ -41,6 +37,9 @@ withDefaults(defineProps<{
   border: var(--border-strong);
   border-radius: var(--radius-pill);
   background: var(--color-cream);
+  position: sticky;
+  top: 12px;
+  z-index: 20;
 }
 
 .brand {
@@ -68,18 +67,14 @@ withDefaults(defineProps<{
   text-underline-offset: 4px;
 }
 
-.link.active {
-  color: var(--color-forest);
+@media (max-width: 900px) {
+  .link { display: none; }
 }
 
 @media (max-width: 760px) {
   .nav {
     border-radius: 24px;
     padding-left: 16px;
-  }
-
-  .link {
-    display: none;
   }
 }
 </style>

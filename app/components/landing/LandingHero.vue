@@ -13,11 +13,11 @@
           Опиши мысль — студия соберёт сильный сценарий, разложит его на кадры и подготовит промты для визуала.
         </p>
         <div class="actions">
-          <UiAppButton variant="primary" size="lg" to="/projects">
-            Открыть проекты →
+          <UiAppButton variant="primary" size="lg" to="/studio">
+            Открыть студию →
           </UiAppButton>
-          <UiAppButton class="ghost-on-dark" size="lg" to="/plans">
-            Выбрать тариф
+          <UiAppButton class="ghost-on-dark" size="lg" to="/#pricing">
+            Смотреть тарифы
           </UiAppButton>
         </div>
       </div>

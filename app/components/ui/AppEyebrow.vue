@@ -1,0 +1,27 @@
+<script setup lang="ts">
+withDefaults(defineProps<{
+  tone?: 'forest' | 'lavender' | 'cream'
+}>(), {
+  tone: 'forest'
+})
+</script>
+
+<template>
+  <p class="eyebrow" :class="`is-${tone}`">
+    <slot />
+  </p>
+</template>
+
+<style scoped>
+.eyebrow {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.is-forest { color: var(--color-forest); }
+.is-lavender { color: var(--color-lavender); }
+.is-cream { color: var(--color-cream); }
+</style>

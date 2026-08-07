@@ -1,0 +1,36 @@
+/* Design tokens — keep in sync with app/assets/tokens.ts */
+:root {
+  --color-cream: #ffffeb;
+  --color-stone: #e4e4d0;
+  --color-ink: #1a1a1a;
+  --color-forest: #034f46;
+  --color-lavender: #f0d7ff;
+  --color-lavender-hover: #e5c2fb;
+  --color-ember: #ffa946;
+  --color-fog: #78786f;
+  --color-muted: #61615a;
+  --color-danger: #8a1f1f;
+  --color-danger-soft: #ffe8e8;
+  --color-cream-soft: #ffffd8;
+  --color-cream-dim: #c9c9be;
+
+  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "EB Garamond", Georgia, serif;
+
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+  --radius-3xl: 32px;
+  --radius-4xl: 40px;
+  --radius-5xl: 64px;
+  --radius-pill: 999px;
+
+  --layout-max: 1200px;
+  --layout-gutter: 32px;
+  --layout-gutter-mobile: 20px;
+
+  --border-strong: 2px solid var(--color-ink);
+  --shadow-soft: 0 12px 40px rgba(26, 26, 26, 0.12);
+}

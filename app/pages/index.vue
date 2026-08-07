@@ -13,6 +13,5 @@ useHead({ title: 'Viral Script Studio — из идеи в ролик' })
     <LandingProjects />
     <LandingStudio />
     <LandingPricing />
-    <LandingClosing />
   </main>
 </template>

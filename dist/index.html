@@ -535,17 +535,47 @@
     .style-option { border:2px solid var(--ink); border-radius:20px; box-shadow:none; } .style-option.is-selected { outline:3px solid var(--lavender); }
     .help-widget { border:2px solid var(--ink); border-radius:20px; background:var(--cream); box-shadow:none; } .help-title { color:var(--ink); } .help-icon { background:var(--forest); color:var(--cream); }
     @media (max-width:760px) { .app-shell { width:min(100% - 20px,1200px); } .app-header { border-radius:24px; } .app-layout { grid-template-columns:1fr; gap:20px; padding-top:24px; } .workflow-sidebar { position:static; grid-template-columns:repeat(4,1fr); border-radius:24px; } .workflow-step { grid-template-columns:1fr; justify-items:center; padding:6px 2px; } .workflow-step strong { font-size:10px; } .workflow-step i { display:none; } .hero { margin-bottom:28px; } .idea-panel,.storyboard,.scripts-panel,.prompt-stage { padding:24px; border-radius:32px; } h1,.hero h1 { font-size:52px; } .stage-heading h2,.scripts-head h2,.storyboard h2,.prompt-stage h2 { font-size:36px; } }
+
+    /* Header and project flow cleanup */
+    .app-header { grid-template-columns:auto minmax(0,1fr) auto; gap:24px; }
+    .app-logo { min-width:max-content; padding:0 4px; }
+    .project-meta { justify-content:flex-start; gap:12px; }
+    .project-label { color:var(--fog); font-size:13px; font-weight:600; }
+    .project-switcher { gap:8px; }
+    .project-select { min-width:170px; max-width:220px; }
+    .new-project-button { padding:0 13px; white-space:nowrap; }
+    .header-actions { justify-content:flex-end; }
+    .header-plans-link { display:flex; align-items:center; gap:10px; color:var(--ink); font-size:14px; font-weight:600; text-decoration:none; }
+    .header-plans-link:hover { text-decoration:underline; text-underline-offset:4px; }
+    .header-plans-link .header-model { max-width:none; padding-left:10px; color:var(--fog); font-size:13px; font-weight:500; }
+    .workflow-sidebar { align-self:start; min-height:238px; padding:16px 12px; }
+    .workflow-title { margin:2px 8px 9px; color:var(--fog); font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+    .workflow-step { grid-template-columns:24px minmax(0,1fr) 10px; min-height:46px; padding:0 12px; border-radius:14px; }
+    .workflow-step strong { font-size:14px; font-weight:600; }
+    .project-modal-dialog { width:min(520px,100%); padding:36px; }
+    .project-modal-dialog > .eyebrow { margin-bottom:12px; }
+    .project-modal-dialog h2 { max-width:370px; font-size:43px; line-height:.92; letter-spacing:-.035em; }
+    .project-modal-dialog p { max-width:400px; margin:12px 0 0; font-size:15px; line-height:1.4; }
+    .project-modal-form { gap:9px; margin-top:28px; }
+    .project-modal-form label { color:var(--ink); font-size:13px; font-weight:600; }
+    .project-modal-form input { min-height:52px; border:2px solid var(--ink) !important; border-radius:12px; background:var(--cream) !important; color:var(--ink) !important; -webkit-text-fill-color:var(--ink) !important; font-size:16px; }
+    .project-modal-form input::placeholder { color:var(--fog); opacity:1; }
+    .project-modal-form input:focus { outline:3px solid var(--lavender); outline-offset:2px; box-shadow:none; }
+    .project-modal-actions { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:12px; margin-top:20px; }
+    .project-modal-actions .project-action { min-height:48px; padding:0 18px; }
+    .project-modal-actions .button { min-height:48px; width:100%; }
+    @media (max-width:760px) { .project-label { display:none; } .new-project-button { width:38px; padding:0; overflow:hidden; font-size:0; } .new-project-button::after { content:'+'; font-size:21px; } .workflow-sidebar { min-height:auto; padding:8px; } .workflow-title { display:none; } .project-modal-dialog { padding:26px 22px; border-radius:30px; } .project-modal-dialog h2 { font-size:38px; } }
   </style>
 </head>
 <body>
   <div class="app-shell">
     <header class="app-header" data-ui-enter>
-      <a class="app-logo" href="#idea" aria-label="Viral Script Studio"><span class="app-logo-mark">✦</span><span>Viral Script Studio</span></a>
-      <div class="project-meta"><div class="project-switcher"><select class="project-select" id="project-select" aria-label="Текущий проект"></select><button class="project-action" id="new-project" type="button">＋</button><button class="project-action" id="duplicate-project" type="button" title="Дублировать проект">⧉</button></div><span class="save-state" id="save-state">Сохранено</span></div>
-      <div class="header-actions"><a class="header-connection" id="plans-button" href="./plans.html"><span class="connection-dot"></span><span id="header-ai-status">Тариф Plus</span><span class="header-model" id="header-model-status">199 ₽ / мес</span></a><a class="header-settings" id="open-settings" href="./plans.html" aria-label="Тарифы">✦</a></div>
+      <a class="app-logo" href="#idea" aria-label="Viral Script Studio"><span>Viral Script Studio</span></a>
+      <div class="project-meta"><span class="project-label">Проект</span><div class="project-switcher"><select class="project-select" id="project-select" aria-label="Текущий проект"></select><button class="project-action new-project-button" id="new-project" type="button">Новый проект</button></div></div>
+      <div class="header-actions"><a class="header-plans-link" id="plans-button" href="./plans.html"><span>Тарифы</span><span class="header-model" id="header-model-status">199 ₽ / мес</span></a></div>
     </header>
     <div class="app-layout">
-      <nav class="workflow-sidebar" aria-label="Этапы проекта" data-ui-enter>
+      <nav class="workflow-sidebar" aria-label="Этапы проекта" data-ui-enter><p class="workflow-title">Этапы</p>
         <button class="workflow-step is-active" type="button" data-workflow-target="idea"><span>01</span><strong>Идея</strong><i>●</i></button>
         <button class="workflow-step" type="button" data-workflow-target="scripts-panel"><span>02</span><strong>Сценарий</strong><i>○</i></button>
         <button class="workflow-step is-locked" type="button" data-workflow-target="storyboard"><span>03</span><strong>Раскадровка</strong><i>○</i></button>
@@ -604,7 +634,7 @@
     </div>
   </div>
   <div class="project-modal" id="project-modal" hidden role="dialog" aria-modal="true" aria-labelledby="project-modal-title">
-    <div class="project-modal-dialog"><h2 id="project-modal-title">Новый проект</h2><p>Проекты сохраняются на этом устройстве. Экспортируйте файл, чтобы передать проект другому человеку или перенести в другой браузер.</p><form class="project-modal-form" id="project-form"><input id="project-name-input" maxlength="70" required placeholder="Например: Коллекционер взглядов"><div class="project-modal-actions"><button class="project-action" id="cancel-project" type="button">Отмена</button><button class="button primary" type="submit">Создать проект</button></div></form></div>
+    <div class="project-modal-dialog"><p class="eyebrow">Новый проект</p><h2 id="project-modal-title">Дайте ролику рабочее имя</h2><p>Оно нужно только для порядка в ваших проектах — потом его можно изменить.</p><form class="project-modal-form" id="project-form"><label for="project-name-input">Название проекта</label><input id="project-name-input" maxlength="70" required placeholder="Например: Коллекционер взглядов"><div class="project-modal-actions"><button class="project-action" id="cancel-project" type="button">Отмена</button><button class="button primary" type="submit">Создать проект →</button></div></form></div>
   </div>
   <aside class="help-widget is-collapsed" id="help-widget" aria-label="Справка по работе с редактором">
     <div class="help-bar" id="help-drag-handle">
@@ -702,7 +732,7 @@
     function updateApiStatus() {
       apiStatus.textContent = 'AI включён по подписке';
       apiStatus.classList.add('is-ready');
-      headerAiStatus.textContent = 'Тарифы →';
+      if (headerAiStatus) headerAiStatus.textContent = 'Тарифы';
       headerModelStatus.textContent = plans[activePlan].price;
     }
     function showApiError(message) {
@@ -1288,7 +1318,7 @@
     let referenceDbName = 'viral-script-studio-references-v1';
     function inputValues(selector) { return [...document.querySelectorAll(selector)].map((field) => field.value); }
     function saveDraft() {
-      saveState.textContent = 'Сохранено';
+      if (saveState) saveState.textContent = 'Сохранено';
       const state = {
         idea: idea.innerText,
         visualStyle: visualStyle.value,
@@ -1451,13 +1481,6 @@
       await switchProject(nextId);
     });
     projectSelect.addEventListener('change', () => { switchProject(projectSelect.value); });
-    duplicateProjectButton.addEventListener('click', async () => {
-      saveDraft();
-      const current = getProjects().find((project) => project.id === activeProjectId);
-      const state = localStorage.getItem(draftKey);
-      const nextId = createProject(`${current?.name || 'Проект'} — копия`, state);
-      await switchProject(nextId);
-    });
     function exportPayload() {
       return {
         version: 1,

@@ -148,15 +148,42 @@ async function callOpenRouter (apiKey: string, payload: Record<string, unknown>)
   return primary
 }
 
+/**
+ * Dynamic env read — Nitro inlines static process.env.FOO at build time,
+ * which freezes empty secrets on Vercel. Bracket access stays runtime-real.
+ */
+function runtimeEnv (name: string): string {
+  try {
+    return String(process.env[name] || '').trim()
+  } catch {
+    return ''
+  }
+}
+
 /** Resolve server secrets at runtime (Vercel env) and from Nuxt runtimeConfig. */
 export function resolveOpenRouterApiKey () {
   const config = useRuntimeConfig()
+  // Prefer Nuxt runtimeConfig (filled from NUXT_OPENROUTER_API_KEY at request time)
   return String(
     config.openrouterApiKey
-    || process.env.NUXT_OPENROUTER_API_KEY
-    || process.env.OPENROUTER_API_KEY
+    || runtimeEnv('NUXT_OPENROUTER_API_KEY')
+    || runtimeEnv('OPENROUTER_API_KEY')
     || ''
   ).trim()
+}
+
+export function resolveOpenRouterKeyDebug () {
+  const config = useRuntimeConfig()
+  const fromConfig = String(config.openrouterApiKey || '').trim()
+  const fromNuxt = runtimeEnv('NUXT_OPENROUTER_API_KEY')
+  const fromPlain = runtimeEnv('OPENROUTER_API_KEY')
+  const key = fromConfig || fromNuxt || fromPlain
+  return {
+    hasRuntimeConfig: Boolean(fromConfig),
+    hasNuxtEnv: Boolean(fromNuxt),
+    hasPlainEnv: Boolean(fromPlain),
+    keyLength: key.length
+  }
 }
 
 export function resolveSiteUrl () {
@@ -167,9 +194,9 @@ export function resolveSiteUrl () {
   } catch {
     /* ignore */
   }
-  return String(
-    process.env.NUXT_PUBLIC_SITE_URL
-    || process.env.SITE_URL
+  return (
+    runtimeEnv('NUXT_PUBLIC_SITE_URL')
+    || runtimeEnv('SITE_URL')
     || 'https://promtage.vercel.app'
   ).replace(/\/$/, '')
 }

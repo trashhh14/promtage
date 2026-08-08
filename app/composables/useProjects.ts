@@ -11,6 +11,7 @@ export type ProjectDraft = {
   idea?: string
   visualStyle?: string
   duration?: number
+  contentType?: string
   selectedModel?: string
   scenarios?: string[]
   storyboardVisible?: boolean

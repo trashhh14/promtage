@@ -4,7 +4,6 @@ useHead({ title: 'Проекты — Viral Script Studio' })
 const router = useRouter()
 const {
   projects,
-  activeId,
   init,
   sortByUpdated,
   getProjectProgress,
@@ -30,9 +29,89 @@ const deleteCopy = ref('')
 const toast = ref('')
 let toastTimer = 0
 
+const dragId = ref('')
+const trashHot = ref(false)
+let dragGhostEl: HTMLElement | null = null
+
 onMounted(() => {
   init()
 })
+
+onBeforeUnmount(() => {
+  cleanupDragGhost()
+})
+
+function cleanupDragGhost () {
+  if (dragGhostEl) {
+    dragGhostEl.remove()
+    dragGhostEl = null
+  }
+}
+
+function buildDragGhost (name: string, stageLabel: string) {
+  cleanupDragGhost()
+  const ghost = document.createElement('div')
+  ghost.setAttribute('aria-hidden', 'true')
+  Object.assign(ghost.style, {
+    position: 'absolute',
+    top: '0',
+    left: '0',
+    // Keep on-page for reliable browser snapshots, but off-screen
+    transform: 'translate(-100vw, -100vh)',
+    width: '240px',
+    boxSizing: 'border-box',
+    padding: '16px 18px',
+    border: '1px solid rgba(255, 255, 255, 0.72)',
+    borderRadius: '22px',
+    background: 'rgba(245, 240, 232, 0.9)',
+    color: '#1a2e1f',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.9), 0 18px 44px rgba(26,46,31,0.18)',
+    fontFamily: 'DM Sans, ui-sans-serif, system-ui, sans-serif',
+    opacity: '1',
+    zIndex: '99999',
+    pointerEvents: 'none',
+    WebkitFontSmoothing: 'antialiased'
+  })
+
+  const badge = document.createElement('div')
+  Object.assign(badge.style, {
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: '5px 10px',
+    marginBottom: '10px',
+    borderRadius: '999px',
+    background: '#6b4eff',
+    color: '#f8f6ff',
+    fontSize: '11px',
+    fontWeight: '700'
+  })
+  badge.textContent = stageLabel
+
+  const title = document.createElement('div')
+  Object.assign(title.style, {
+    fontFamily: 'DM Serif Display, Georgia, serif',
+    fontSize: '28px',
+    fontWeight: '400',
+    lineHeight: '0.95',
+    letterSpacing: '-0.03em',
+    color: '#1a2e1f'
+  })
+  title.textContent = name
+
+  const hint = document.createElement('div')
+  Object.assign(hint.style, {
+    marginTop: '10px',
+    color: '#7a8c7c',
+    fontSize: '12px',
+    fontWeight: '600'
+  })
+  hint.textContent = 'Перетащите в корзину'
+
+  ghost.append(badge, title, hint)
+  document.body.appendChild(ghost)
+  dragGhostEl = ghost
+  return ghost
+}
 
 const filtered = computed(() => {
   const query = search.value.trim().toLowerCase()
@@ -104,6 +183,63 @@ function confirmDelete () {
   showToast('Проект удалён')
 }
 
+function onCardDragStart (id: string, event: DragEvent) {
+  openMenuId.value = ''
+  dragId.value = id
+  trashHot.value = false
+
+  const project = projects.value.find(item => item.id === id)
+  const progress = getProjectProgress(id)
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', id)
+    const ghost = buildDragGhost(project?.name || 'Проект', progress.label)
+    // Offset so cursor sits inside the card, not on the edge
+    event.dataTransfer.setDragImage(ghost, 36, 28)
+  }
+}
+
+function onCardDragEnd () {
+  dragId.value = ''
+  trashHot.value = false
+  // Keep ghost in DOM briefly so the drag image stays sharp until drop ends
+  window.setTimeout(() => cleanupDragGhost(), 80)
+}
+
+function onTrashDragOver (event: DragEvent) {
+  if (!dragId.value) return
+  event.preventDefault()
+  if (event.dataTransfer) event.dataTransfer.dropEffect = 'move'
+  trashHot.value = true
+}
+
+function onTrashDragLeave (event: DragEvent) {
+  const target = event.currentTarget as HTMLElement
+  const related = event.relatedTarget as Node | null
+  if (related && target.contains(related)) return
+  trashHot.value = false
+}
+
+function onTrashDrop (event: DragEvent) {
+  event.preventDefault()
+  const id = dragId.value || event.dataTransfer?.getData('text/plain') || ''
+  trashHot.value = false
+  dragId.value = ''
+  if (!id) return
+
+  if (projects.value.length <= 1) {
+    showToast('Нельзя удалить последний проект')
+    return
+  }
+
+  const result = deleteProject(id)
+  if (!result.ok) {
+    showToast(result.reason === 'last' ? 'Нельзя удалить последний проект' : 'Проект не найден')
+    return
+  }
+  showToast('Проект удалён')
+}
+
 function onDuplicate (id: string) {
   openMenuId.value = ''
   const copy = duplicateProject(id)
@@ -121,7 +257,7 @@ function plural (n: number) {
 
 <template>
   <main class="shell" @click="openMenuId = ''">
-    <UiAppNav active="projects" cta-label="Открыть последний" cta-to="/studio" />
+    <UiAppNav />
 
     <header class="page-head">
       <div>
@@ -137,9 +273,6 @@ function plural (n: number) {
           placeholder="Найти проект…"
           aria-label="Поиск проектов"
         >
-        <UiAppButton variant="primary" @click="startCreate">
-          + Новый проект
-        </UiAppButton>
       </div>
     </header>
 
@@ -162,20 +295,39 @@ function plural (n: number) {
         :key="project.id"
         :project="project"
         :progress="getProjectProgress(project.id)"
-        :active="project.id === activeId"
         :menu-open="openMenuId === project.id"
         :relative-time="formatRelative(project.updatedAt)"
+        :dragging="dragId === project.id"
+        :shrinking="dragId === project.id && trashHot"
         @open="openStudio(project.id)"
         @rename="startRename(project.id)"
         @duplicate="onDuplicate(project.id)"
         @delete="startDelete(project.id)"
         @toggle-menu="openMenuId = openMenuId === project.id ? '' : project.id"
+        @drag-start="onCardDragStart"
+        @drag-end="onCardDragEnd"
       />
       <button class="create-card" type="button" @click="startCreate">
-        <strong>+ Новый проект</strong>
-        <span>С чистого листа</span>
+        <span class="create-icon" aria-hidden="true">+</span>
+        <span class="create-title">Новый проект</span>
+        <span class="create-hint">С чистого листа</span>
       </button>
     </section>
+
+    <div
+      v-if="projects.length"
+      class="trash"
+      :class="{ active: Boolean(dragId), hot: trashHot }"
+      role="region"
+      aria-label="Корзина: перетащите проект, чтобы удалить"
+      @dragover="onTrashDragOver"
+      @dragenter.prevent="trashHot = Boolean(dragId)"
+      @dragleave="onTrashDragLeave"
+      @drop="onTrashDrop"
+    >
+      <span class="trash-icon" aria-hidden="true">🗑</span>
+      <span class="trash-label">{{ trashHot ? 'Отпустите' : 'Корзина' }}</span>
+    </div>
 
     <UiAppModal :open="createOpen" labelled-by="create-title" @close="createOpen = false">
       <UiAppEyebrow>Новый проект</UiAppEyebrow>
@@ -276,15 +428,20 @@ h1 {
   min-width: min(280px, 100%);
   min-height: 44px;
   padding: 0 14px;
-  border: var(--border-strong);
+  border: 1px solid rgba(107, 78, 255, 0.22);
   border-radius: var(--radius-md);
-  background: var(--color-cream);
+  background: rgba(255, 255, 255, 0.44);
+  box-shadow: var(--glass-shadow-light);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   outline: none;
 }
 
-.search:focus {
-  outline: 3px solid var(--color-lavender);
-  outline-offset: 2px;
+.search:focus,
+.search:focus-visible {
+  outline: none;
+  border-color: rgba(107, 78, 255, 0.62);
+  box-shadow: 0 0 0 4px rgba(107, 78, 255, 0.1);
 }
 
 .meta {
@@ -301,33 +458,71 @@ h1 {
 }
 
 .create-card {
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  box-sizing: border-box;
   min-height: 280px;
-  border: 2px dashed var(--color-ink);
+  padding: 28px 24px;
+  border: 1px dashed rgba(107, 78, 255, 0.36);
   border-radius: var(--radius-2xl);
-  background: transparent;
+  background: var(--glass-mid);
+  box-shadow: var(--glass-shadow-mid);
+  backdrop-filter: blur(16px) saturate(125%);
+  -webkit-backdrop-filter: blur(16px) saturate(125%);
   color: var(--color-ink);
   cursor: pointer;
   text-align: center;
+  transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
 }
 
 .create-card:hover {
-  background: var(--color-lavender);
+  border-style: solid;
+  background: rgba(255, 255, 255, 0.52);
+  transform: translateY(-3px);
+  box-shadow: var(--glass-shadow-strong);
 }
 
-.create-card strong {
+.create-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 1px solid rgba(107, 78, 255, 0.28);
+  border-radius: 50%;
+  background: var(--color-accent-tint);
+  color: var(--color-accent);
+  font-family: var(--font-sans);
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.create-card:hover .create-icon {
+  background: var(--color-accent);
+  color: #f8f6ff;
+}
+
+.create-title {
   display: block;
+  margin: 0;
   font-family: var(--font-serif);
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.03em;
 }
 
-.create-card span {
+.create-hint {
   display: block;
-  margin-top: 8px;
+  margin: 0;
   color: var(--color-fog);
+  font-family: var(--font-sans);
   font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
 }
 
 .empty {
@@ -335,10 +530,13 @@ h1 {
   place-items: center;
   min-height: 340px;
   padding: 48px 24px;
-  border: 2px dashed var(--color-ink);
+  border: 1px dashed rgba(26, 46, 31, 0.24);
   border-radius: var(--radius-3xl);
   text-align: center;
-  background: var(--color-stone);
+  background: var(--glass-mid);
+  box-shadow: var(--glass-shadow-mid);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .empty h2 {
@@ -373,15 +571,17 @@ h1 {
 .form input {
   min-height: 52px;
   padding: 0 14px;
-  border: var(--border-strong);
+  border: 1px solid rgba(107, 78, 255, 0.24);
   border-radius: var(--radius-md);
-  background: var(--color-cream);
+  background: rgba(255, 255, 255, 0.48);
   outline: none;
 }
 
-.form input:focus {
-  outline: 3px solid var(--color-lavender);
-  outline-offset: 2px;
+.form input:focus,
+.form input:focus-visible {
+  outline: none;
+  border-color: rgba(107, 78, 255, 0.62);
+  box-shadow: 0 0 0 4px rgba(107, 78, 255, 0.1);
 }
 
 .form-actions {
@@ -406,20 +606,149 @@ h1 {
   font-weight: 600;
 }
 
-@media (max-width: 960px) {
-  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.trash {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 55;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 72px;
+  height: 72px;
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.56);
+  box-shadow: var(--glass-shadow-mid);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--color-ink);
+  transition:
+    width 0.16s ease,
+    height 0.16s ease,
+    background 0.16s ease,
+    border-color 0.16s ease,
+    transform 0.16s ease;
 }
 
-@media (max-width: 720px) {
+.trash.active {
+  width: 88px;
+  height: 88px;
+  background: var(--color-stone);
+}
+
+.trash.hot {
+  width: 104px;
+  height: 104px;
+  border-color: var(--color-danger);
+  background: var(--color-danger-soft);
+  transform: scale(1.04);
+}
+
+.trash-icon {
+  font-size: 22px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.trash.active .trash-icon {
+  font-size: 26px;
+}
+
+.trash.hot .trash-icon {
+  font-size: 30px;
+}
+
+.trash-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
+
+.trash.hot .trash-label {
+  color: var(--color-danger);
+}
+
+@media (max-width: 960px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
   .page-head {
     display: grid;
-    gap: 18px;
-    margin-top: 36px;
+    gap: 16px;
+    margin-top: 28px;
+    margin-bottom: 20px;
   }
 
-  .tools { justify-content: stretch; }
-  .search, .tools :deep(.btn) { width: 100%; }
-  .grid { grid-template-columns: 1fr; }
-  h1 { font-size: 48px; }
+  h1 {
+    font-size: clamp(36px, 10vw, 48px);
+  }
+
+  .page-head p {
+    font-size: 15px;
+  }
+
+  .tools {
+    justify-content: stretch;
+  }
+
+  .search {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .create-card {
+    min-height: 180px;
+    padding: 22px 18px;
+    border-radius: 22px;
+  }
+
+  .create-title {
+    font-size: 28px;
+  }
+
+  .empty {
+    min-height: 280px;
+    padding: 32px 18px;
+    border-radius: 24px;
+  }
+
+  .empty h2 {
+    font-size: 32px;
+  }
+
+  .form-actions {
+    grid-template-columns: 1fr;
+  }
+
+  /* Drag-to-trash is desktop-only; mobile uses card menu */
+  .trash {
+    display: none;
+  }
+
+  .toast {
+    left: 12px;
+    right: 12px;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    transform: none;
+    text-align: center;
+  }
+}
+
+@media (max-width: 420px) {
+  h1 {
+    font-size: 34px;
+  }
 }
 </style>

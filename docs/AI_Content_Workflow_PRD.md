@@ -2,6 +2,17 @@
 
 Source: user-provided `AI_Content_Workflow_PRD.md`.
 
+## Live model instructions
+
+Stage system prompts are **not** hardcoded only in TypeScript. Edit these files — the API loads them on every generation:
+
+| Stage | File |
+|-------|------|
+| Idea → Scenario | [`docs/prompts/scenario.md`](./prompts/scenario.md) |
+| Scenario → Storyboard | [`docs/prompts/storyboard.md`](./prompts/storyboard.md) |
+
+The client sends only user inputs (idea / approved script, style, duration, model). The server always injects the matching markdown as the system instruction.
+
 ## Product goal
 
 Build a professional structured workflow for turning one content idea into a scenario, storyboard and final image prompts. It is not a chat interface: each stage is edited, processed and approved before the following stage unlocks.

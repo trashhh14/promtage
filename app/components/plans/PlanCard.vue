@@ -54,23 +54,30 @@ const emit = defineEmits<{
   flex-direction: column;
   min-height: 440px;
   padding: 32px;
-  border: var(--border-strong);
+  border: 1px solid var(--glass-border-mid);
   border-radius: var(--radius-3xl);
-  background: var(--color-cream);
+  background: var(--glass-mid);
+  box-shadow: var(--glass-shadow-mid);
+  backdrop-filter: blur(16px) saturate(125%);
+  -webkit-backdrop-filter: blur(16px) saturate(125%);
 }
 
 .card.pro {
   background: var(--color-ink);
-  color: var(--color-cream);
+  color: #f5f0e8;
+  border-color: transparent;
+  box-shadow: 0 18px 48px rgba(26, 46, 31, 0.2);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .card.selected {
-  outline: 3px solid var(--color-lavender);
+  outline: 3px solid var(--color-accent);
   outline-offset: 3px;
 }
 
 .card.pro.selected {
-  outline-color: var(--color-ember);
+  outline-color: var(--color-accent);
 }
 
 h2 {
@@ -80,7 +87,7 @@ h2 {
 }
 
 .pro h2 {
-  color: var(--color-cream);
+  color: #f5f0e8;
 }
 
 .desc {
@@ -129,12 +136,12 @@ ul {
 li::before {
   content: "✓";
   margin-right: 10px;
-  color: var(--color-forest);
+  color: var(--color-accent);
   font-weight: 700;
 }
 
 .pro li::before {
-  color: var(--color-ember);
+  color: #a999ff;
 }
 
 .choose {

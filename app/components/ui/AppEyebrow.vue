@@ -21,7 +21,7 @@ withDefaults(defineProps<{
   text-transform: uppercase;
 }
 
-.is-forest { color: var(--color-forest); }
-.is-lavender { color: var(--color-lavender); }
+.is-forest { color: var(--color-accent); }
+.is-lavender { color: var(--color-accent); }
 .is-cream { color: var(--color-cream); }
 </style>

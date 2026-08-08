@@ -8,7 +8,7 @@ export default defineNuxtConfig({
       title: 'Viral Script Studio',
       htmlAttrs: { lang: 'ru' },
       meta: [
-        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
         {
           name: 'description',
           content: 'Viral Script Studio превращает идею в сценарий, раскадровку и промты для визуала.'
@@ -24,8 +24,8 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     openrouterApiKey: process.env.OPENROUTER_API_KEY || '',
-    plusModel: process.env.PLUS_MODEL || 'google/gemini-3.5-flash-lite',
-    proModel: process.env.PRO_MODEL || 'anthropic/claude-sonnet-4',
+    plusModel: process.env.PLUS_MODEL || 'google/gemini-2.5-flash',
+    proModel: process.env.PRO_MODEL || 'anthropic/claude-sonnet-5',
     public: {
       appName: 'Viral Script Studio'
     }

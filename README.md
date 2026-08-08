@@ -167,6 +167,15 @@ Landing → Projects (дом приложения) → Studio (один прое
 | `/api/workflow/scenario` | POST | Генерация сценария (OpenRouter) |
 | `/api/workflow/storyboard` | POST | Генерация раскадровки |
 
+**Live-инструкции модели** (system prompt) — markdown, правишь файл → следующий запрос уже по новым правилам:
+
+| Этап | Файл |
+|------|------|
+| Идея → сценарий | `docs/prompts/scenario.md` |
+| Сценарий → раскадровка | `docs/prompts/storyboard.md` |
+
+Клиент шлёт только входы (`idea` / `script`, style, duration, model). System prompt с клиента **игнорируется** — сервер всегда читает MD.
+
 Без `OPENROUTER_API_KEY` студия падает в **demo-режим** (локальные заглушки), UI не ломается.
 
 ---
@@ -194,6 +203,14 @@ server/
     health.get.ts
     workflow/scenario.post.ts
     workflow/storyboard.post.ts
+  utils/
+    openrouter.ts
+    promptLoader.ts          # читает docs/prompts/*.md
+docs/
+  prompts/
+    scenario.md              # live system prompt сценария
+    storyboard.md            # live system prompt раскадровки
+  AI_Content_Workflow_PRD.md
 public/
   og.png
   style-gallery.png
@@ -220,12 +237,12 @@ npm install
 
 ### Env
 
-Скопируйте `.env.example` → `.env` (или `.env.local`):
+Скопируйте `.env.example` → `.env` и вставьте ключ:
 
 ```bash
 OPENROUTER_API_KEY=sk-or-...
-PLUS_MODEL=google/gemini-3.5-flash-lite
-PRO_MODEL=anthropic/claude-sonnet-4
+PLUS_MODEL=google/gemini-2.5-flash
+PRO_MODEL=anthropic/claude-sonnet-5
 ```
 
 ### Dev
@@ -253,11 +270,12 @@ npm run generate
 
 ## Поведение AI
 
-1. Студия шлёт `system` + `user` из engines на `/api/workflow/*`
-2. Nitro проксирует в OpenRouter (ключ только на сервере)
-3. Модель зависит от тарифа (`plan` в body)
-4. Rate limit: 20 req / мин / IP
-5. При ошибке/отсутствии ключа — demo-контент
+1. Студия шлёт `idea`/`script` + style/duration/model на `/api/workflow/*`
+2. Сервер подмешивает system prompt из `docs/prompts/*.md`
+3. Nitro проксирует в OpenRouter (ключ только на сервере)
+4. Модель из пикера / fallback по `plan`
+5. Rate limit: 20 req / мин / IP
+6. При ошибке/отсутствии ключа — demo-контент
 
 ---
 

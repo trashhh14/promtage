@@ -3,24 +3,27 @@
  * CSS variables in tokens.css mirror these values 1:1.
  */
 export const colors = {
-  cream: '#ffffeb',
-  stone: '#e4e4d0',
-  ink: '#1a1a1a',
-  forest: '#034f46',
+  cream: '#f5f0e8',
+  stone: '#e8ede3',
+  sage: '#dce8dc',
+  ink: '#1a2e1f',
+  forest: '#3d4f3f',
   lavender: '#f0d7ff',
-  lavenderHover: '#e5c2fb',
-  ember: '#ffa946',
-  fog: '#78786f',
-  muted: '#61615a',
+  lavenderHover: '#e8c8fb',
+  accent: '#6b4eff',
+  accentHover: '#5038e0',
+  ember: '#f59e0b',
+  fog: '#7a8c7c',
+  muted: '#58695a',
   danger: '#8a1f1f',
   dangerSoft: '#ffe8e8',
-  creamSoft: '#ffffd8',
-  creamDim: '#c9c9be'
+  creamSoft: '#faf7f0',
+  creamDim: '#d8dfd3'
 } as const
 
 export const fonts = {
-  sans: '"Figtree", ui-sans-serif, system-ui, sans-serif',
-  serif: '"EB Garamond", Georgia, serif'
+  sans: '"DM Sans", ui-sans-serif, system-ui, sans-serif',
+  serif: '"DM Serif Display", Georgia, serif'
 } as const
 
 export const radii = {

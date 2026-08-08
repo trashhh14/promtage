@@ -1,6 +1,17 @@
 <script setup lang="ts">
 import { SCRIPT_ENGINE } from '~/utils/scriptEngine'
 import { STORYBOARD_ENGINE } from '~/utils/storyboardEngine'
+import {
+  getDefaultModelId,
+  isAllowedModel,
+  modelSelectOptions,
+  resolveModelId
+} from '~~/shared/llmModels'
+import {
+  contentTypeSelectOptions,
+  getDefaultContentTypeId,
+  resolveContentTypeId
+} from '~~/shared/contentTypes'
 
 type Frame = {
   duration: number
@@ -11,8 +22,17 @@ type Frame = {
 type WorkflowStep = {
   id: string
   label: string
-  status: 'active' | 'complete' | 'locked' | 'idle'
+  focused: boolean
+  done: boolean
+  unlocked: boolean
 }
+
+const STEP_DEFS = [
+  { id: 'idea', label: 'Идея' },
+  { id: 'scripts-panel', label: 'Сценарий' },
+  { id: 'storyboard', label: 'Раскадровка' },
+  { id: 'prompt-stage', label: 'Промты' }
+] as const
 
 definePageMeta({ layout: 'studio' })
 
@@ -32,11 +52,14 @@ const {
   getPlan,
   studioPath
 } = useProjects()
-const { planId, hydrate: hydratePlan, current: currentPlan } = usePlan()
+const { planId, hydrate: hydratePlan } = usePlan()
+
+const DEFAULT_STYLE = 'Photorealistic cinematic editorial'
 
 const idea = ref('')
 const duration = ref(30)
-const visualStyle = ref('Photorealistic cinematic editorial')
+const contentType = ref(getDefaultContentTypeId())
+const selectedModel = ref(getDefaultModelId())
 const scenarios = ref<string[]>([])
 const frames = ref<Frame[]>([])
 const prompts = ref<string[]>([])
@@ -46,43 +69,68 @@ const generating = ref(false)
 const errorMessage = ref('')
 const createOpen = ref(false)
 const createName = ref('')
-const styleOpen = ref(false)
 const saveReady = ref(false)
 
-const styleOptions = [
-  { label: 'Photoreal', value: 'Photorealistic cinematic editorial', position: '0 0' },
-  { label: 'Editorial', value: 'High-end fashion editorial photography', position: '50% 0' },
-  { label: 'Noir', value: 'Moody cinematic noir lighting', position: '100% 0' },
-  { label: 'Anime', value: 'Stylized anime key visual', position: '0 100%' },
-  { label: '35mm film', value: 'Dreamy 35mm film still, soft grain', position: '50% 100%' },
-  { label: 'Surreal', value: 'Surreal vibrant editorial art direction', position: '100% 100%' }
-]
+/** Content format options for the studio picker. */
+const contentTypeOptions = contentTypeSelectOptions()
+
+/** Text LLM options for the studio picker (from shared catalog). */
+const modelOptions = modelSelectOptions()
 
 const sortedProjects = computed(() => sortByUpdated())
 
-const steps = computed<WorkflowStep[]>(() => {
-  const scenarioReady = scenarios.value.length > 0
-  const storyboardReady = frames.value.length > 0
-  const promptsReady = prompts.value.length > 0
+/** Furthest unlocked stage by workflow progress (0–3). */
+const progressIndex = computed(() => {
+  if (!scenarios.value.length) return 0
+  if (!scriptApproved.value) return 1
+  if (!frames.value.length || !framesApproved.value) return 2
+  return 3
+})
 
-  return [
-    { id: 'idea', label: 'Идея', status: !scenarioReady ? 'active' : 'complete' },
-    {
-      id: 'scripts-panel',
-      label: 'Сценарий',
-      status: !scenarioReady ? 'locked' : (!storyboardReady ? 'active' : 'complete')
-    },
-    {
-      id: 'storyboard',
-      label: 'Раскадровка',
-      status: !storyboardReady ? (scenarioReady ? 'active' : 'locked') : (promptsReady ? 'complete' : 'active')
-    },
-    {
-      id: 'prompt-stage',
-      label: 'Промты',
-      status: !promptsReady ? (storyboardReady && framesApproved.value ? 'active' : 'locked') : 'active'
-    }
-  ]
+/** Green highlight follows where the user is looking / clicked. */
+const focusedStepId = ref<string>('idea')
+
+const steps = computed<WorkflowStep[]>(() => {
+  const max = progressIndex.value
+  const focus = focusedStepId.value
+  return STEP_DEFS.map((def, index) => ({
+    id: def.id,
+    label: def.label,
+    unlocked: index <= max,
+    done: index < max,
+    focused: def.id === focus
+  }))
+})
+
+function syncFocusToProgress () {
+  focusedStepId.value = STEP_DEFS[progressIndex.value]?.id || 'idea'
+}
+
+function selectStep (id: string) {
+  const step = steps.value.find(item => item.id === id)
+  if (!step?.unlocked) return
+  focusedStepId.value = id
+  // Prefer visible section; storyboard/prompts may be hidden until unlocked content exists
+  const el = document.getElementById(id)
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    return
+  }
+  // Fallback scroll targets
+  const fallback = id === 'storyboard'
+    ? document.getElementById('scripts-panel')
+    : id === 'prompt-stage'
+      ? document.getElementById('storyboard')
+      : document.getElementById('idea')
+  fallback?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+// When workflow advances (generate / approve), move green to the new current stage
+watch(progressIndex, (next, prev) => {
+  if (prev === undefined) return
+  if (next !== prev) {
+    focusedStepId.value = STEP_DEFS[next]?.id || 'idea'
+  }
 })
 
 const timelineSummary = computed(() => {
@@ -95,12 +143,14 @@ function loadProjectState (id: string) {
   const draft = getDraft(id)
   idea.value = draft?.idea || ''
   duration.value = draft?.duration ?? 30
-  visualStyle.value = draft?.visualStyle || visualStyle.value
+  contentType.value = resolveContentTypeId(draft?.contentType, getDefaultContentTypeId())
+  selectedModel.value = resolveModelId(draft?.selectedModel, getDefaultModelId())
   scenarios.value = Array.isArray(draft?.scenarios) ? [...draft!.scenarios!] : []
   frames.value = Array.isArray(draft?.frames) ? draft!.frames!.map(frame => ({ ...frame })) : []
   prompts.value = Array.isArray(draft?.prompts) ? [...draft!.prompts!] : []
   scriptApproved.value = Boolean(draft?.scriptApproved)
   framesApproved.value = Boolean(draft?.framesApproved)
+  nextTick(() => syncFocusToProgress())
 }
 
 function persistState () {
@@ -108,7 +158,9 @@ function persistState () {
   saveDraft(activeId.value, {
     idea: idea.value,
     duration: duration.value,
-    visualStyle: visualStyle.value,
+    visualStyle: DEFAULT_STYLE,
+    contentType: contentType.value,
+    selectedModel: selectedModel.value,
     scenarios: scenarios.value,
     storyboardVisible: frames.value.length > 0,
     frames: frames.value,
@@ -119,7 +171,7 @@ function persistState () {
   })
 }
 
-watch([idea, duration, visualStyle, scenarios, frames, prompts, scriptApproved, framesApproved], () => {
+watch([idea, duration, contentType, selectedModel, scenarios, frames, prompts, scriptApproved, framesApproved], () => {
   persistState()
 }, { deep: true })
 
@@ -154,7 +206,7 @@ function submitCreate () {
 }
 
 function scrollTo (id: string) {
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  selectStep(id)
 }
 
 function demoScenario (rawIdea: string) {
@@ -200,10 +252,20 @@ function buildPromptsFromFrames (list: Frame[], style: string) {
   })
 }
 
+function activeModelId () {
+  return resolveModelId(selectedModel.value, getDefaultModelId())
+}
+
 async function generateScenario () {
   const text = idea.value.trim()
   if (!text) {
     errorMessage.value = 'Сначала опишите идею.'
+    return
+  }
+
+  const model = activeModelId()
+  if (!isAllowedModel(model)) {
+    errorMessage.value = 'Выберите доступную модель.'
     return
   }
 
@@ -212,27 +274,37 @@ async function generateScenario () {
   try {
     const request = SCRIPT_ENGINE.createRequest({
       idea: text,
-      style: visualStyle.value,
+      style: DEFAULT_STYLE,
       duration: duration.value,
-      model: 'Claude Sonnet 4.6',
+      contentType: contentType.value,
+      model,
       references: []
     })
 
     try {
-      const data = await $fetch<{ output: string }>('/api/workflow/scenario', {
+      const data = await $fetch<{ output: string, model?: string }>('/api/workflow/scenario', {
         method: 'POST',
         body: { ...request, plan: planId.value }
       })
       scenarios.value = [parseScenarioOutput(data.output)]
-    } catch {
-      scenarios.value = [demoScenario(text)]
+    } catch (err: any) {
+      const status = err?.statusCode || err?.status || 0
+      // Demo only when AI is not configured; otherwise surface the error
+      if (status === 503) {
+        scenarios.value = [demoScenario(text)]
+        errorMessage.value = 'AI не настроен — показан демо-сценарий. Добавьте OPENROUTER_API_KEY.'
+      } else {
+        errorMessage.value = err?.statusMessage || err?.data?.statusMessage || err?.message || 'Не удалось сгенерировать сценарий.'
+        return
+      }
     }
 
     scriptApproved.value = false
     frames.value = []
     prompts.value = []
     framesApproved.value = false
-    scrollTo('scripts-panel')
+    focusedStepId.value = 'scripts-panel'
+    nextTick(() => document.getElementById('scripts-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
   } finally {
     generating.value = false
   }
@@ -241,16 +313,21 @@ async function generateScenario () {
 async function approveScripts () {
   if (!scenarios.value.length) return
   scriptApproved.value = true
+  errorMessage.value = ''
+
+  const model = activeModelId()
 
   try {
     const request = STORYBOARD_ENGINE.createRequest({
       script: scenarios.value[0],
-      style: visualStyle.value,
+      style: DEFAULT_STYLE,
       duration: duration.value,
+      contentType: contentType.value,
+      model,
       references: []
     })
     try {
-      const data = await $fetch<{ output: string }>('/api/workflow/storyboard', {
+      const data = await $fetch<{ output: string, model?: string }>('/api/workflow/storyboard', {
         method: 'POST',
         body: { ...request, plan: planId.value }
       })
@@ -264,21 +341,30 @@ async function approveScripts () {
       } else {
         frames.value = buildDemoFrames(scenarios.value[0], duration.value)
       }
-    } catch {
-      frames.value = buildDemoFrames(scenarios.value[0], duration.value)
+    } catch (err: any) {
+      const status = err?.statusCode || err?.status || 0
+      if (status === 503) {
+        frames.value = buildDemoFrames(scenarios.value[0], duration.value)
+        errorMessage.value = 'AI не настроен — показана демо-раскадровка.'
+      } else {
+        frames.value = buildDemoFrames(scenarios.value[0], duration.value)
+        errorMessage.value = err?.statusMessage || err?.data?.statusMessage || err?.message || 'Раскадровка: ошибка API, показан локальный черновик.'
+      }
     }
   } catch {
     frames.value = buildDemoFrames(scenarios.value[0], duration.value)
   }
 
-  nextTick(() => scrollTo('storyboard'))
+  focusedStepId.value = 'storyboard'
+  nextTick(() => document.getElementById('storyboard')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
 }
 
 function approveFrames () {
   if (!frames.value.length) return
   framesApproved.value = true
-  prompts.value = buildPromptsFromFrames(frames.value, visualStyle.value)
-  nextTick(() => scrollTo('prompt-stage'))
+  prompts.value = buildPromptsFromFrames(frames.value, DEFAULT_STYLE)
+  focusedStepId.value = 'prompt-stage'
+  nextTick(() => document.getElementById('prompt-stage')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
 }
 
 function download (filename: string, contents: string, type = 'text/plain;charset=utf-8') {
@@ -310,8 +396,9 @@ function exportProject () {
     project: findProject(activeId.value),
     exportedAt: new Date().toISOString(),
     idea: idea.value,
-    style: visualStyle.value,
+    style: DEFAULT_STYLE,
     duration: duration.value,
+    contentType: contentType.value,
     scenarios: scenarios.value,
     frames: frames.value,
     prompts: prompts.value
@@ -350,14 +437,11 @@ watch(() => route.query.project, (value) => {
     <StudioHeader
       :projects="sortedProjects"
       :active-id="activeId"
-      :plan-label="currentPlan.priceLabel + ' / мес'"
       @switch="switchProject"
       @create="openCreate"
     />
 
     <div class="layout">
-      <StudioWorkflowSidebar :steps="steps" @select="scrollTo" />
-
       <main class="workspace">
         <section class="hero">
           <h1>Идея → вирусный сценарий.</h1>
@@ -372,11 +456,12 @@ watch(() => route.query.project, (value) => {
           <StudioIdeaPanel
             v-model:idea="idea"
             v-model:duration="duration"
-            v-model:visual-style="visualStyle"
+            v-model:content-type="contentType"
+            v-model:selected-model="selectedModel"
             :generating="generating"
-            :style-options="styleOptions"
+            :content-type-options="contentTypeOptions"
+            :model-options="modelOptions"
             @generate="generateScenario"
-            @open-style="styleOpen = true"
           />
 
           <StudioScriptsPanel
@@ -400,14 +485,9 @@ watch(() => route.query.project, (value) => {
           />
         </div>
       </main>
-    </div>
 
-    <StudioStyleModal
-      v-model="visualStyle"
-      :open="styleOpen"
-      :options="styleOptions"
-      @close="styleOpen = false"
-    />
+      <StudioWorkflowSidebar :steps="steps" @select="selectStep" />
+    </div>
 
     <UiAppModal :open="createOpen" labelled-by="studio-create-title" @close="createOpen = false">
       <UiAppEyebrow>Новый проект</UiAppEyebrow>
@@ -434,43 +514,50 @@ watch(() => route.query.project, (value) => {
 </template>
 
 <style scoped>
-.studio-shell {
-  padding-bottom: 88px;
-}
+/* padding inherited from global .shell — no page-specific rail width */
 
 .layout {
   display: grid;
-  grid-template-columns: 184px minmax(0, 1fr);
-  gap: 32px;
+  /* Main column first, stages rail on the right */
+  grid-template-columns: minmax(0, 1fr) 200px;
+  gap: 28px;
+  align-items: start;
   padding-top: 40px;
 }
 
 .workspace {
   min-width: 0;
+  /* Keep primary panels visually centered in the main column */
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
 }
 
 .hero {
-  margin: 0 0 48px;
-  padding: 24px 0 32px;
-  border-bottom: var(--border-strong);
+  margin: 0 0 40px;
+  padding: 20px 0 28px;
+  border-bottom: 1px solid rgba(26, 46, 31, 0.14);
+  text-align: center;
 }
 
 h1 {
-  max-width: 760px;
-  font-size: clamp(54px, 7vw, 92px);
-  line-height: 0.86;
+  max-width: 720px;
+  margin: 0 auto;
+  font-size: clamp(48px, 6vw, 80px);
+  line-height: 0.88;
 }
 
 .hero p {
-  max-width: 335px;
-  margin: 16px 0 0;
+  max-width: 420px;
+  margin: 16px auto 0;
   font-size: 16px;
   line-height: 1.35;
+  color: var(--color-fog, #78786f);
 }
 
 .stack {
   display: grid;
-  gap: 56px;
+  gap: 20px;
 }
 
 .error {
@@ -502,9 +589,9 @@ h1 {
 .form input {
   min-height: 52px;
   padding: 0 14px;
-  border: var(--border-strong);
+  border: 1px solid rgba(107, 78, 255, 0.24);
   border-radius: var(--radius-md);
-  background: var(--color-cream);
+  background: rgba(255, 255, 255, 0.48);
   outline: none;
 }
 
@@ -515,15 +602,62 @@ h1 {
   margin-top: 8px;
 }
 
+@media (max-width: 980px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 176px;
+    gap: 20px;
+  }
+
+  .workspace {
+    max-width: none;
+  }
+}
+
 @media (max-width: 760px) {
   .layout {
     grid-template-columns: 1fr;
-    gap: 20px;
-    padding-top: 24px;
+    gap: 16px;
+    padding-top: 16px;
   }
 
-  .hero { margin-bottom: 28px; }
-  h1 { font-size: 52px; }
-  .stack { gap: 28px; }
+  /* Stages strip first on mobile (above content) via order */
+  .layout > :last-child {
+    order: -1;
+  }
+
+  .workspace {
+    max-width: none;
+  }
+
+  .hero {
+    margin-bottom: 20px;
+    padding: 8px 0 18px;
+    text-align: left;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(34px, 9vw, 48px);
+    line-height: 0.92;
+  }
+
+  .hero p {
+    margin: 12px 0 0;
+    font-size: 15px;
+  }
+
+  .stack {
+    gap: 14px;
+  }
+
+  .form-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  h1 {
+    font-size: 32px;
+  }
 }
 </style>

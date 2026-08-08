@@ -25,13 +25,13 @@ withDefaults(defineProps<{
 }
 
 .is-forest {
-  background: var(--color-forest);
-  color: var(--color-cream);
+  background: var(--color-accent-tint);
+  color: var(--color-accent);
 }
 
 .is-lavender {
-  background: var(--color-lavender);
-  color: var(--color-ink);
+  background: var(--color-accent);
+  color: #f8f6ff;
 }
 
 .is-ink {
@@ -40,8 +40,9 @@ withDefaults(defineProps<{
 }
 
 .is-stone {
-  background: var(--color-stone);
+  background: rgba(255, 255, 255, 0.42);
   color: var(--color-ink);
+  border: 1px solid var(--glass-border-light);
 }
 
 .is-outline {

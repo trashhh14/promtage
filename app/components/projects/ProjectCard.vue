@@ -4,9 +4,10 @@ import type { Project, ProjectProgress } from '~/composables/useProjects'
 const props = defineProps<{
   project: Project
   progress: ProjectProgress
-  active?: boolean
   menuOpen?: boolean
   relativeTime: string
+  dragging?: boolean
+  shrinking?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -15,11 +16,38 @@ const emit = defineEmits<{
   duplicate: []
   delete: []
   toggleMenu: []
+  dragStart: [id: string, event: DragEvent]
+  dragEnd: []
 }>()
+
+/** Drag-to-trash is a desktop affordance; touch uses the card menu */
+const canDrag = ref(false)
+
+onMounted(() => {
+  canDrag.value = window.matchMedia('(pointer: fine)').matches
+})
+
+function onDragStart (event: DragEvent) {
+  if (!canDrag.value) {
+    event.preventDefault()
+    return
+  }
+  emit('dragStart', props.project.id, event)
+}
+
+function onDragEnd () {
+  emit('dragEnd')
+}
 </script>
 
 <template>
-  <article class="card" :class="{ active }">
+  <article
+    class="card"
+    :class="{ dragging, shrinking, 'no-drag': !canDrag }"
+    :draggable="canDrag"
+    @dragstart="onDragStart"
+    @dragend="onDragEnd"
+  >
     <div class="top">
       <UiAppBadge :tone="progress.stage >= 4 ? 'lavender' : progress.stage === 0 ? 'stone' : progress.stage === 3 ? 'ink' : 'forest'">
         {{ progress.label }}
@@ -72,19 +100,48 @@ const emit = defineEmits<{
   flex-direction: column;
   min-height: 280px;
   padding: 24px;
-  border: var(--border-strong);
+  border: 1px solid var(--glass-border-mid);
   border-radius: var(--radius-2xl);
-  background: var(--color-cream);
-  transition: background 0.15s ease;
+  background: var(--glass-mid);
+  box-shadow: var(--glass-shadow-mid);
+  backdrop-filter: blur(16px) saturate(125%);
+  -webkit-backdrop-filter: blur(16px) saturate(125%);
+  transition: transform 190ms ease, background 190ms ease, box-shadow 190ms ease;
+  cursor: grab;
+  user-select: none;
+  transform-origin: center center;
+  transition:
+    background 0.15s ease,
+    transform 0.18s ease,
+    opacity 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .card:hover {
-  background: var(--color-cream-soft);
+  background: rgba(255, 255, 255, 0.5);
+  transform: translateY(-3px);
+  box-shadow: var(--glass-shadow-strong);
 }
 
-.card.active {
-  outline: 3px solid var(--color-lavender);
-  outline-offset: 2px;
+.card:active {
+  transform: translateY(-1px);
+  cursor: grabbing;
+}
+
+/* In-place placeholder; the cursor follows a solid custom ghost with sharp borders */
+.card.dragging {
+  background: var(--color-stone);
+  border: 2px dashed var(--color-ink);
+  box-shadow: none;
+  opacity: 0.5;
+}
+
+.card.shrinking {
+  opacity: 0.85;
+  transform: scale(0.76);
+  border: 3px solid var(--color-danger);
+  background: var(--color-danger-soft);
+  box-shadow: none;
 }
 
 .top {
@@ -103,16 +160,16 @@ const emit = defineEmits<{
 .icon {
   width: 36px;
   height: 36px;
-  border: var(--border-strong);
+  border: 1px solid var(--glass-border-strong);
   border-radius: var(--radius-sm);
-  background: var(--color-cream);
+  background: rgba(255, 255, 255, 0.42);
   color: var(--color-ink);
   cursor: pointer;
 }
 
 .menu-btn:hover,
 .icon:hover {
-  background: var(--color-stone);
+  background: rgba(255, 255, 255, 0.62);
 }
 
 .menu {
@@ -122,10 +179,12 @@ const emit = defineEmits<{
   z-index: 5;
   min-width: 180px;
   padding: 6px;
-  border: var(--border-strong);
+  border: 1px solid var(--glass-border-strong);
   border-radius: 14px;
-  background: var(--color-cream);
-  box-shadow: var(--shadow-soft);
+  background: rgba(245, 240, 232, 0.88);
+  box-shadow: var(--glass-shadow-strong);
+  backdrop-filter: blur(20px) saturate(135%);
+  -webkit-backdrop-filter: blur(20px) saturate(135%);
 }
 
 .menu button {
@@ -144,7 +203,7 @@ const emit = defineEmits<{
 }
 
 .menu button:hover {
-  background: var(--color-stone);
+  background: var(--color-accent-tint);
 }
 
 .menu button.danger {
@@ -169,7 +228,7 @@ h2 {
   height: 6px;
   margin: 20px 0 12px;
   border-radius: var(--radius-pill);
-  background: var(--color-stone);
+  background: rgba(255, 255, 255, 0.44);
   overflow: hidden;
 }
 
@@ -177,7 +236,7 @@ h2 {
   display: block;
   height: 100%;
   border-radius: var(--radius-pill);
-  background: var(--color-forest);
+  background: var(--color-accent);
 }
 
 .meta {
@@ -201,5 +260,35 @@ h2 {
   width: 44px;
   height: 44px;
   min-height: 44px;
+}
+
+.card.no-drag {
+  cursor: default;
+  user-select: auto;
+}
+
+@media (max-width: 760px) {
+  .card {
+    min-height: 0;
+    padding: 18px 16px;
+    border-radius: 22px;
+  }
+
+  h2 {
+    font-size: 28px;
+  }
+
+  .preview {
+    font-size: 14px;
+  }
+
+  .menu-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .actions {
+    gap: 8px;
+  }
 }
 </style>

@@ -1,21 +1,35 @@
 /* Design tokens — keep in sync with app/assets/tokens.ts */
 :root {
-  --color-cream: #ffffeb;
-  --color-stone: #e4e4d0;
-  --color-ink: #1a1a1a;
-  --color-forest: #034f46;
+  --color-cream: #f5f0e8;
+  --color-stone: #e8ede3;
+  --color-sage: #dce8dc;
+  --color-ink: #1a2e1f;
+  --color-forest: #3d4f3f;
   --color-lavender: #f0d7ff;
-  --color-lavender-hover: #e5c2fb;
-  --color-ember: #ffa946;
-  --color-fog: #78786f;
-  --color-muted: #61615a;
+  --color-lavender-hover: #e8c8fb;
+  --color-accent: #6b4eff;
+  --color-accent-hover: #5038e0;
+  --color-accent-tint: rgba(107, 78, 255, 0.1);
+  --color-ember: #f59e0b;
+  --color-fog: #7a8c7c;
+  --color-muted: #58695a;
   --color-danger: #8a1f1f;
   --color-danger-soft: #ffe8e8;
-  --color-cream-soft: #ffffd8;
-  --color-cream-dim: #c9c9be;
+  --color-cream-soft: #faf7f0;
+  --color-cream-dim: #d8dfd3;
 
-  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "EB Garamond", Georgia, serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "DM Serif Display", Georgia, serif;
+
+  --glass-strong: rgba(255, 255, 255, 0.52);
+  --glass-mid: rgba(255, 255, 255, 0.38);
+  --glass-light: rgba(255, 255, 255, 0.26);
+  --glass-border-strong: rgba(255, 255, 255, 0.72);
+  --glass-border-mid: rgba(255, 255, 255, 0.56);
+  --glass-border-light: rgba(255, 255, 255, 0.42);
+  --glass-shadow-strong: inset 0 1px 0 rgba(255, 255, 255, 0.92), inset 0 -1px 0 rgba(255, 255, 255, 0.16), 0 18px 48px rgba(26, 46, 31, 0.09), 0 3px 10px rgba(26, 46, 31, 0.05);
+  --glass-shadow-mid: inset 0 1px 0 rgba(255, 255, 255, 0.82), 0 10px 30px rgba(26, 46, 31, 0.07);
+  --glass-shadow-light: inset 0 1px 0 rgba(255, 255, 255, 0.68), 0 5px 16px rgba(26, 46, 31, 0.05);
 
   --radius-sm: 10px;
   --radius-md: 12px;
@@ -28,9 +42,10 @@
   --radius-pill: 999px;
 
   --layout-max: 1200px;
-  --layout-gutter: 32px;
-  --layout-gutter-mobile: 20px;
+  /* Horizontal inset is applied as shell padding (not width calc) to avoid rail jumps */
+  --layout-gutter: 16px;
+  --layout-gutter-mobile: 10px;
 
-  --border-strong: 2px solid var(--color-ink);
-  --shadow-soft: 0 12px 40px rgba(26, 26, 26, 0.12);
+  --border-strong: 1px solid var(--glass-border-strong);
+  --shadow-soft: var(--glass-shadow-mid);
 }

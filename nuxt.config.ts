@@ -22,12 +22,29 @@ export default defineNuxtConfig({
       ]
     }
   },
+  /**
+   * Pack prompt markdown into the Nitro bundle.
+   * - server/assets/prompts → assets:server (default Nitro)
+   * - docs/prompts → assets:prompts (editor-facing copies, also packed)
+   * Keep both trees in sync when editing instructions.
+   */
+  nitro: {
+    serverAssets: [
+      {
+        baseName: 'prompts',
+        dir: './docs/prompts'
+      }
+    ]
+  },
   runtimeConfig: {
+    // Override at runtime: NUXT_OPENROUTER_API_KEY (preferred) or OPENROUTER_API_KEY (local .env)
     openrouterApiKey: process.env.OPENROUTER_API_KEY || '',
     plusModel: process.env.PLUS_MODEL || 'google/gemini-2.5-flash',
     proModel: process.env.PRO_MODEL || 'anthropic/claude-sonnet-5',
     public: {
-      appName: 'Viral Script Studio'
+      appName: 'Viral Script Studio',
+      // Absolute site URL for OpenRouter Referer + future OG links. NUXT_PUBLIC_SITE_URL
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || process.env.SITE_URL || ''
     }
   }
 })

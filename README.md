@@ -171,8 +171,8 @@ Landing → Projects (дом приложения) → Studio (один прое
 
 | Этап | Файл |
 |------|------|
-| Идея → сценарий | `docs/prompts/scenario.md` |
-| Сценарий → раскадровка | `docs/prompts/storyboard.md` |
+| Идея → сценарий | `docs/prompts/scenario.md` (+ pack `server/assets/prompts/`) |
+| Сценарий → раскадровка | `docs/prompts/storyboard.md` (+ pack `server/assets/prompts/`) |
 
 Клиент шлёт только входы (`idea` / `script`, style, duration, model). System prompt с клиента **игнорируется** — сервер всегда читает MD.
 
@@ -226,7 +226,7 @@ README.md
 
 ### Требования
 
-- Node.js **22+** (рекомендуется LTS)
+- Node.js **20+** (рекомендуется 22 LTS)
 - npm 10+
 
 ### Установка
@@ -237,13 +237,16 @@ npm install
 
 ### Env
 
-Скопируйте `.env.example` → `.env` и вставьте ключ:
+Скопируйте `.env.example` → `.env`:
 
 ```bash
 OPENROUTER_API_KEY=sk-or-...
+NUXT_PUBLIC_SITE_URL=http://127.0.0.1:3000
 PLUS_MODEL=google/gemini-2.5-flash
 PRO_MODEL=anthropic/claude-sonnet-5
 ```
+
+На хостинге достаточно секретов (см. **Деплой** ниже). Ключ также можно задать как `NUXT_OPENROUTER_API_KEY`.
 
 ### Dev
 
@@ -253,18 +256,87 @@ npm run dev
 
 Откройте: **http://127.0.0.1:3000**
 
-### Build
+### Build / production
 
 ```bash
 npm run build
+npm run start          # node .output/server/index.mjs
+# или локально:
 npm run preview
 ```
 
-Статический export (без server API):
+Проверка живости: `GET /api/health` → `{ ok: true, serverKeyConfigured: true/false }`.
+
+> `npm run generate` — static export **без** server API. Для студии с AI нужен **Node server** (`build` + `start`).
+
+---
+
+## Деплой (шаг 1)
+
+Нужен **Node runtime** (Nuxt/Nitro), не pure static hosting.
+
+### Env на хостинге (минимум)
+
+| Переменная | Обязательно | Назначение |
+|------------|-------------|------------|
+| `OPENROUTER_API_KEY` или `NUXT_OPENROUTER_API_KEY` | да* | Ключ OpenRouter |
+| `NUXT_PUBLIC_SITE_URL` | да в prod | Публичный URL сайта (Referer для OpenRouter) |
+| `PLUS_MODEL` / `PRO_MODEL` | нет | Fallback-модели |
+| `PORT` / `HOST` | нет | Обычно `3000` / `0.0.0.0` (VPS) |
+
+\*Без ключа UI жив, AI уходит в demo-режим (503 → локальные заглушки).
+
+### Vercel
+
+1. Import repo → Framework **Nuxt** (auto).
+2. Env: `OPENROUTER_API_KEY`, `NUXT_PUBLIC_SITE_URL=https://your-app.vercel.app`
+3. Deploy. Build: `nuxt build` (default).
+
+### Railway / Render / Fly / VPS
 
 ```bash
-npm run generate
+npm ci
+npm run build
+npm run start
 ```
+
+- Start command: `npm run start` или `node .output/server/index.mjs`
+- Health check: `/api/health`
+- Открой `HOST=0.0.0.0` если платформа не проставляет сама
+
+### Docker (опционально)
+
+```dockerfile
+FROM node:22-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:22-alpine
+WORKDIR /app
+ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+ENV PORT=3000
+COPY --from=build /app/.output ./.output
+COPY --from=build /app/package.json ./package.json
+EXPOSE 3000
+CMD ["node", ".output/server/index.mjs"]
+```
+
+### После деплоя
+
+1. Открой сайт → логин (если включён) → студия  
+2. `GET /api/health` — `serverKeyConfigured: true`  
+3. Сгенерируй сценарий на короткой идее  
+
+### Важно
+
+- Промпты **упакованы в Nitro** (`server/assets/prompts` + `docs/prompts` как serverAssets) — на serverless файлы с диска не нужны. При правке инструкций обнови оба пути (или скопируй docs → server/assets).  
+- Rate limit (20/мин/IP) — in-memory: на multi-instance serverless счётчики не общие (для MVP ок).  
+- Проекты пока в **localStorage** браузера — на другом устройстве их нет.  
+- PowerShell-fallback OpenRouter только на **Windows**; Linux-хостинг ходит через `fetch`.
 
 ---
 

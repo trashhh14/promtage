@@ -60,7 +60,7 @@ try {
     '${OPENROUTER_URL}'
   )
   [void]$request.Headers.TryAddWithoutValidation('Authorization', "Bearer $apiKey")
-  [void]$request.Headers.TryAddWithoutValidation('HTTP-Referer', 'http://127.0.0.1:3000')
+  [void]$request.Headers.TryAddWithoutValidation('HTTP-Referer', $env:OR_SITE_URL)
   [void]$request.Headers.TryAddWithoutValidation('X-Title', 'Viral Script Studio')
 
   $bodyBytes = [System.IO.File]::ReadAllBytes($bodyPath)
@@ -98,6 +98,7 @@ try {
         env: {
           ...process.env,
           OR_API_KEY: apiKey,
+          OR_SITE_URL: openRouterSiteUrl(),
           OR_BODY_PATH: bodyPath,
           OR_OUT_PATH: outPath,
           OR_CODE_PATH: codePath
@@ -113,13 +114,27 @@ try {
   }
 }
 
+function openRouterSiteUrl () {
+  try {
+    const config = useRuntimeConfig()
+    const fromConfig = String(config.public?.siteUrl || '').trim()
+    if (fromConfig) return fromConfig.replace(/\/$/, '')
+  } catch {
+    /* outside request context */
+  }
+  return process.env.NUXT_PUBLIC_SITE_URL
+    || process.env.SITE_URL
+    || 'http://127.0.0.1:3000'
+}
+
 async function openRouterViaFetch (apiKey: string, bodyJson: string): Promise<UpstreamResult> {
+  const siteUrl = openRouterSiteUrl()
   const upstream = await fetch(OPENROUTER_URL, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json; charset=utf-8',
-      'HTTP-Referer': 'http://127.0.0.1:3000',
+      'HTTP-Referer': siteUrl,
       'X-Title': 'Viral Script Studio'
     },
     body: bodyJson

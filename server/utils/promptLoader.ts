@@ -4,8 +4,9 @@ import { join } from 'node:path'
 export type PromptStage = 'scenario' | 'storyboard'
 
 /**
- * Live prompt files under docs/prompts/.
- * Edit those markdown files to change model instructions without touching TS.
+ * Live prompt files.
+ * Source of truth for editors: docs/prompts/*.md
+ * Runtime pack: server/assets/prompts/*.md (Nitro assets:server) — keep in sync.
  */
 const PROMPT_FILES: Record<PromptStage, string> = {
   scenario: 'scenario.md',
@@ -19,7 +20,6 @@ function stripDocHeader (raw: string): string {
   if (fence !== -1) {
     return text.slice(fence + 5).trim()
   }
-  // Fallback: drop leading # heading lines until a blank line after intro
   const lines = text.split(/\r?\n/)
   if (lines[0]?.startsWith('#')) {
     let i = 1
@@ -30,12 +30,64 @@ function stripDocHeader (raw: string): string {
   return text
 }
 
+function asText (value: unknown): string {
+  if (value == null) return ''
+  if (typeof value === 'string') return value
+  if (value instanceof Uint8Array) return Buffer.from(value).toString('utf8')
+  if (typeof Buffer !== 'undefined' && Buffer.isBuffer(value)) return value.toString('utf8')
+  return String(value)
+}
+
+/**
+ * Load order:
+ * 1) Nitro server assets (production / serverless)
+ * 2) docs/prompts on disk (dev / node with repo cwd)
+ * 3) server/assets/prompts on disk
+ */
+async function readPromptFile (fileName: string): Promise<string> {
+  const assetKeys = [
+    `prompts/${fileName}`,
+    fileName
+  ]
+
+  for (const key of assetKeys) {
+    try {
+      const storage = useStorage('assets:server')
+      const fromServer = asText(await storage.getItem(key)).trim()
+      if (fromServer) return fromServer
+    } catch {
+      /* continue */
+    }
+    try {
+      const storage = useStorage('assets:prompts')
+      const fromPrompts = asText(await storage.getItem(key)).trim()
+      if (fromPrompts) return fromPrompts
+    } catch {
+      /* continue */
+    }
+  }
+
+  const candidates = [
+    join(process.cwd(), 'docs', 'prompts', fileName),
+    join(process.cwd(), 'server', 'assets', 'prompts', fileName)
+  ]
+
+  for (const fullPath of candidates) {
+    try {
+      const raw = await readFile(fullPath, 'utf8')
+      if (raw.trim()) return raw
+    } catch {
+      /* try next */
+    }
+  }
+
+  throw new Error(`Prompt file not found: ${fileName}`)
+}
+
 export async function loadStagePrompt (stage: PromptStage): Promise<string> {
   const fileName = PROMPT_FILES[stage]
-  // process.cwd() is project root for Nuxt/Nitro in dev and typical node deploy
-  const fullPath = join(process.cwd(), 'docs', 'prompts', fileName)
   try {
-    const raw = await readFile(fullPath, 'utf8')
+    const raw = await readPromptFile(fileName)
     const prompt = stripDocHeader(raw)
     if (!prompt) {
       throw new Error(`Prompt file is empty: ${fileName}`)

@@ -98,7 +98,7 @@ try {
         env: {
           ...process.env,
           OR_API_KEY: apiKey,
-          OR_SITE_URL: openRouterSiteUrl(),
+          OR_SITE_URL: resolveSiteUrl(),
           OR_BODY_PATH: bodyPath,
           OR_OUT_PATH: outPath,
           OR_CODE_PATH: codePath
@@ -114,21 +114,8 @@ try {
   }
 }
 
-function openRouterSiteUrl () {
-  try {
-    const config = useRuntimeConfig()
-    const fromConfig = String(config.public?.siteUrl || '').trim()
-    if (fromConfig) return fromConfig.replace(/\/$/, '')
-  } catch {
-    /* outside request context */
-  }
-  return process.env.NUXT_PUBLIC_SITE_URL
-    || process.env.SITE_URL
-    || 'http://127.0.0.1:3000'
-}
-
 async function openRouterViaFetch (apiKey: string, bodyJson: string): Promise<UpstreamResult> {
-  const siteUrl = openRouterSiteUrl()
+  const siteUrl = resolveSiteUrl()
   const upstream = await fetch(OPENROUTER_URL, {
     method: 'POST',
     headers: {
@@ -161,6 +148,32 @@ async function callOpenRouter (apiKey: string, payload: Record<string, unknown>)
   return primary
 }
 
+/** Resolve server secrets at runtime (Vercel env) and from Nuxt runtimeConfig. */
+export function resolveOpenRouterApiKey () {
+  const config = useRuntimeConfig()
+  return String(
+    config.openrouterApiKey
+    || process.env.NUXT_OPENROUTER_API_KEY
+    || process.env.OPENROUTER_API_KEY
+    || ''
+  ).trim()
+}
+
+export function resolveSiteUrl () {
+  try {
+    const config = useRuntimeConfig()
+    const fromConfig = String(config.public?.siteUrl || '').trim()
+    if (fromConfig) return fromConfig.replace(/\/$/, '')
+  } catch {
+    /* ignore */
+  }
+  return String(
+    process.env.NUXT_PUBLIC_SITE_URL
+    || process.env.SITE_URL
+    || 'https://promtage.vercel.app'
+  ).replace(/\/$/, '')
+}
+
 /**
  * Shared generation path: rate limit, key, model allowlist, OpenRouter call.
  * Callers supply system/user (typically from docs/prompts/*.md + user payload).
@@ -175,6 +188,7 @@ export async function generateWithOpenRouter (
   }
 ) {
   const config = useRuntimeConfig()
+  const apiKey = resolveOpenRouterApiKey()
   const ip = getRequestIP(event, { xForwardedFor: true }) || 'local'
 
   if (isRateLimited(ip)) {
@@ -184,10 +198,10 @@ export async function generateWithOpenRouter (
     })
   }
 
-  if (!config.openrouterApiKey) {
+  if (!apiKey) {
     throw createError({
       statusCode: 503,
-      statusMessage: 'AI-сервер ещё не настроен. Добавьте OPENROUTER_API_KEY в .env.'
+      statusMessage: 'AI-сервер ещё не настроен. Добавьте OPENROUTER_API_KEY в env на Vercel и сделайте Redeploy.'
     })
   }
 
@@ -208,7 +222,7 @@ export async function generateWithOpenRouter (
     })
   }
 
-  const upstream = await callOpenRouter(config.openrouterApiKey, {
+  const upstream = await callOpenRouter(apiKey, {
     model,
     messages: [
       { role: 'system', content: input.system },

@@ -1,11 +1,12 @@
+import { resolveOpenRouterApiKey, resolveSiteUrl } from '../utils/openrouter'
+
 export default defineEventHandler(() => {
-  const config = useRuntimeConfig()
   return {
     ok: true,
     service: 'promtage',
-    serverKeyConfigured: Boolean(config.openrouterApiKey),
+    serverKeyConfigured: Boolean(resolveOpenRouterApiKey()),
     acceptsBrowserKey: false,
-    siteUrl: config.public?.siteUrl || null,
+    siteUrl: resolveSiteUrl() || null,
     nodeEnv: process.env.NODE_ENV || 'development',
     timestamp: new Date().toISOString()
   }

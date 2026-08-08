@@ -37,14 +37,15 @@ export default defineNuxtConfig({
     ]
   },
   runtimeConfig: {
-    // Override at runtime: NUXT_OPENROUTER_API_KEY (preferred) or OPENROUTER_API_KEY (local .env)
-    openrouterApiKey: process.env.OPENROUTER_API_KEY || '',
-    plusModel: process.env.PLUS_MODEL || 'google/gemini-2.5-flash',
-    proModel: process.env.PRO_MODEL || 'anthropic/claude-sonnet-5',
+    // Empty defaults — set on host as OPENROUTER_API_KEY or NUXT_OPENROUTER_API_KEY
+    // (server also reads process.env at runtime for Vercel)
+    openrouterApiKey: '',
+    plusModel: 'google/gemini-2.5-flash',
+    proModel: 'anthropic/claude-sonnet-5',
     public: {
       appName: 'Viral Script Studio',
-      // Absolute site URL for OpenRouter Referer + future OG links. NUXT_PUBLIC_SITE_URL
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || process.env.SITE_URL || ''
+      // Set NUXT_PUBLIC_SITE_URL=https://promtage.vercel.app on Vercel
+      siteUrl: ''
     }
   }
 })

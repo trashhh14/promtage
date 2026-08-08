@@ -2,7 +2,7 @@
 withDefaults(defineProps<{
   /** Primary action on the right (hidden if empty) */
   ctaLabel?: string
-  ctaTo?: string
+  ctaTo?: string | null
   showCta?: boolean
   /**
    * Stick to viewport while scrolling.
@@ -19,6 +19,10 @@ withDefaults(defineProps<{
 
 const route = useRoute()
 const menuOpen = ref(false)
+
+const emit = defineEmits<{
+  cta: []
+}>()
 
 const links = [
   { to: '/', label: 'Главная', match: 'home' },
@@ -88,10 +92,11 @@ function onKey (event: KeyboardEvent) {
       <div class="end">
         <slot name="end" />
         <UiAppButton
-          v-if="showCta && ctaLabel && ctaTo"
+          v-if="showCta && ctaLabel"
           class="cta"
           variant="primary"
-          :to="ctaTo"
+          :to="ctaTo || undefined"
+          @click="!ctaTo && emit('cta')"
         >
           {{ ctaLabel }}
         </UiAppButton>
@@ -125,12 +130,12 @@ function onKey (event: KeyboardEvent) {
         {{ link.label }}
       </NuxtLink>
       <UiAppButton
-        v-if="showCta && ctaLabel && ctaTo"
+        v-if="showCta && ctaLabel"
         class="mobile-cta"
         variant="primary"
         block
-        :to="ctaTo"
-        @click="closeMenu"
+        :to="ctaTo || undefined"
+        @click="!ctaTo && emit('cta'); closeMenu()"
       >
         {{ ctaLabel }}
       </UiAppButton>

@@ -1,6 +1,18 @@
 <script setup lang="ts">
 useHead({ title: 'Viral Script Studio — из идеи в ролик' })
 
+const router = useRouter()
+const { init, createProject, studioPath } = useProjects()
+
+onMounted(() => {
+  init()
+})
+
+function createProjectAndOpen () {
+  const project = createProject('Новый ролик')
+  router.push(studioPath(project.id))
+}
+
 const stages = [
   {
     n: '01',
@@ -33,7 +45,11 @@ const projectPoints = [
 
 <template>
   <main class="shell home">
-    <UiAppNav />
+    <UiAppNav
+      cta-label="Создать проект"
+      :cta-to="null"
+      @cta="createProjectAndOpen"
+    />
 
     <section class="hero">
       <img class="hero-art" src="/og.png" alt="Viral Script Studio">
@@ -48,8 +64,8 @@ const projectPoints = [
               Опиши мысль — студия соберёт сценарий, разложит его на кадры и подготовит промты для визуала.
               Без прыжков между чатами и заметками.
             </p>
-            <UiAppButton class="hero-cta" variant="primary" size="lg" to="/studio">
-              Открыть студию →
+            <UiAppButton class="hero-cta" variant="primary" size="lg" @click="createProjectAndOpen">
+              Создать проект →
             </UiAppButton>
           </div>
         </div>
@@ -96,7 +112,7 @@ const projectPoints = [
           </li>
         </ul>
         <NuxtLink class="text-link" to="/projects">
-          Перейти к проектам →
+          Перейти в студию →
         </NuxtLink>
       </div>
     </section>
